@@ -48,10 +48,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/khanhln/git-tutorial/build
+CMAKE_SOURCE_DIR = /home/khanhln/git_tutorial/build
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/khanhln/git-tutorial
+CMAKE_BINARY_DIR = /home/khanhln/git_tutorial
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,9 +80,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/khanhln/git-tutorial/CMakeFiles /home/khanhln/git-tutorial/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/khanhln/git_tutorial/CMakeFiles /home/khanhln/git_tutorial/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/khanhln/git-tutorial/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/khanhln/git_tutorial/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -110,6 +110,19 @@ depend:
 	$(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
+#=============================================================================
+# Target rules for targets named foo
+
+# Build rule for target.
+foo: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 foo
+.PHONY : foo
+
+# fast build rule for target.
+foo/fast:
+	$(MAKE) -f CMakeFiles/foo.dir/build.make CMakeFiles/foo.dir/build
+.PHONY : foo/fast
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -118,6 +131,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... foo"
 .PHONY : help
 
 
