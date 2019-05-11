@@ -173,6 +173,7 @@ void drawTask() {
 	{
 		gdispClear(White);
 
+		//2.1 EXERCISE 3 FIGURES ------------------------------------------------------------------------------------------------
 		//Calculating new angle for figures
 		if(anglePositionCircle <= -2*mPI)
 		{
@@ -194,7 +195,7 @@ void drawTask() {
 
 		//Calculating new position for the dynamic string
 		dynamicStringPositionX = (dynamicStringPositionX + 1) % displaySizeX;
-		if(abs(displaySizeX-dynamicStringPositionX) <= strlen(dynamicString))
+		if(abs(displaySizeX-dynamicStringPositionX) < strlen(dynamicString))
 		{
 			dynamicStringTmp = displaySizeX - dynamicStringPositionX; // Calculate the start index which will not be shownv on display
 		}
@@ -212,13 +213,13 @@ void drawTask() {
 
 		//SHOW A ROTATING CIRCLE
 		double dynamicPositionCircleX = displaySizeX/2 + distanceOfObjects * cos(anglePositionCircle); // relative to centre point of the screen X Axis
-		double dynamicPositionCircleY = displaySizeY/2 +  distanceOfObjects * sin(anglePositionCircle); // relative to centre point of the scree Y Axis
+		double dynamicPositionCircleY = displaySizeY/2 + distanceOfObjects * sin(anglePositionCircle); // relative to centre point of the scree Y Axis
 		gdispFillCircle(dynamicPositionCircleX, dynamicPositionCircleY, circleRadius, Red);
 		gdispFillCircle(displaySizeX/2 + distanceOfObjects * cos(anglePositionCircle), displaySizeY/2 + distanceOfObjects * sin(anglePositionCircle), circleRadius - circleLineWidth , White);
 	
 		//SHOW A ROTATING SQUARE
 		double dynamicPositionSquareX = displaySizeX/2 + distanceOfObjects * cos(anglePositionSquare); // relative to centre point of the screen X Axis
-		double dynamicPositionSquareY = displaySizeY/2 +  distanceOfObjects * sin(anglePositionSquare);
+		double dynamicPositionSquareY = displaySizeY/2 + distanceOfObjects * sin(anglePositionSquare);
 		gdispFillArea(dynamicPositionSquareX, dynamicPositionSquareY, squareLength, squareLength, Green);
 
 		//SHOW TEXT STATIC
@@ -231,6 +232,66 @@ void drawTask() {
 			gdispDrawString(0, dynamicStringPositionY, &dynamicString[dynamicStringTmp], DejaVuSans10, Black); // NOT SURE
 		}
 		
+
+		//2.2 BUTTON EXERCISE --------------------------------------------------------------------------------------------------
+		uint16_t cntA = 0, cntB = 0, cntC = 0, cntD = 0;
+		if(GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A)) 
+		{
+			while(GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A));
+			cntA++;
+		}
+		if(GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B)) 
+		{
+			while(GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B));
+			cntB++;
+		}
+		if(GPIO_ReadInputDataBit(ESPL_Register_Button_C, ESPL_Pin_Button_C)) 
+		{
+			while(GPIO_ReadInputDataBit(ESPL_Register_Button_C, ESPL_Pin_Button_C));
+			cntC++;
+		}
+		if(GPIO_ReadInputDataBit(ESPL_Register_Button_D, ESPL_Pin_Button_D)) 
+		{
+			while(GPIO_ReadInputDataBit(ESPL_Register_Button_D, ESPL_Pin_Button_D));
+			cntD++;
+		}
+		if(GPIO_ReadInputDataBit(ESPL_Register_Button_K, ESPL_Pin_Button_K)) 
+		{
+			while(GPIO_ReadInputDataBit(ESPL_Register_Button_K, ESPL_Pin_Button_K));
+			cntA = 0;
+			cntB = 0;
+			cntC = 0;
+			cntD = 0;
+		}
+
+		// Generate string with current joystick values
+		sprintf( str, "A: %d, count: %d |B: %d, count: %d |C %d, count: %d |D: %d, count: %d |E: %d|K: %d",
+				 GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A), cntA,
+				 GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B), cntB,
+				 GPIO_ReadInputDataBit(ESPL_Register_Button_C, ESPL_Pin_Button_C), cntC,
+				 GPIO_ReadInputDataBit(ESPL_Register_Button_D, ESPL_Pin_Button_D), cntD,
+				 GPIO_ReadInputDataBit(ESPL_Register_Button_E, ESPL_Pin_Button_E),
+				 GPIO_ReadInputDataBit(ESPL_Register_Button_K, ESPL_Pin_Button_K));
+		// Print string of joystick values
+		gdispDrawString(0, 0, str, font1, Black);
+
+		//2.3 JOYSTICK ------------------------------------------------------------------------------------------------
+		// Generate string with current joystick values
+		sprintf( str, "Axis 1: %5d|Axis 2: %5d|VBat: %5d",
+				 ADC_GetConversionValue(ESPL_ADC_Joystick_1),
+				 ADC_GetConversionValue(ESPL_ADC_Joystick_2),
+				 ADC_GetConversionValue(ESPL_ADC_VBat) );
+	
+		//ADDING THESE VALUES TO MOVE SCREEN
+		//joystickPosition.x/2
+		//joystickPosition.y/2
+		
+		// Print string of joystick values
+		gdispDrawString(0, 11, str, font1, Black);
+
+
+		
+
 	// /* building the cave:
 	//    caveX and caveY define the top left corner of the cave
 	//     circle movment is limited by 64px from center in every direction
