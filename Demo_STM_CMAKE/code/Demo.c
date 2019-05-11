@@ -10,6 +10,7 @@
  */
 #include "includes.h"
 #include <math.h>
+#include <string.h>
 
 #define mPI acos(-1.0)
 
@@ -126,11 +127,6 @@ int main() {
 // }
 
 
-
-
-
-
-
 /**
  * Example task which draws to the display.
  */
@@ -141,14 +137,10 @@ void drawTask() {
 	font_t font1; // Load font for ugfx
 	font1 = gdispOpenFont("DejaVuSans24*");
 
-
 	//Initial Points and Positions
-	double anglePositionSquare = 0;
+	double distanceOfObjects = 30; // rotating Radius aroung the triangle (middle point of screen)
+
 	double anglePositionCircle = mPI;
-	double distanceOfObjects = 30; // rotating Radius aroung the triangle
-
-
-
 	uint16_t circleRadius = 10;
 	uint16_t circleLineWidth = 3;
 	uint16_t circlePositionX = displaySizeX/2 - distanceOfObjects ; // Left X Axis
@@ -161,15 +153,27 @@ void drawTask() {
 	uint16_t trianglePointC_X = displaySizeX/2;
 	uint16_t trianglePointC_Y = (float)1/2 * displaySizeY - 20;
 
+	double anglePositionSquare = 0;
 	uint16_t squareLength = 20;
 	uint16_t squarePositionX = displaySizeX/2 + distanceOfObjects ; // Right X Axis
 	uint16_t squarePositionY = (float)1/2 * displaySizeY - circleRadius;
+
+	char staticString[50] = {"HELLO ESPL"}; // Amount of character ?
+	uint16_t staticStringPositionX = displaySizeX/2 - 30; // CHECK AGAIN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	uint16_t staticStringPositionY = float(2/3) * displaySizeY; // CHECK AGAIN !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+
+	char dynamicString[50] = {"EXERCISE 2"};
+	uint16_t dynamicStringPositionX = 0;
+	uint16_t dynamicStringPositionY = 10;
+	uint16_t dynamicStringTmp = 0;
 
 	
 	//Start endless LOOP
 	while(1)
 	{
 		gdispClear(White);
+
+		//Calculating new angle for figures
 		if(anglePositionCircle <= -2*mPI)
 		{
 			anglePositionCircle = anglePositionCircle + 2*mPI - mPI/360;
@@ -188,12 +192,23 @@ void drawTask() {
 			anglePositionSquare = anglePositionSquare + mPI/360;
 		}
 
+		//Calculating new position for the dynamic string
+		dynamicStringPositionX = (dynamicStringPositionX + 1) % displaySizeX;
+		if(abs(displaySizeX-dynamicStringPositionX) <= strlen(dynamicString))
+		{
+			dynamicStringTmp = displaySizeX - dynamicStringPositionX; // Calculate the start index which will not be shownv on display
+		}
+		else
+		{
+			dynamicStringTmp = 0;
+		}
+		
+		
 
 		//SHOW A TRIANGLE
 		gdispDrawLine(trianglePointA_X, trianglePointA_Y, trianglePointB_X, trianglePointB_Y, Blue);
 		gdispDrawLine(trianglePointB_X, trianglePointB_Y, trianglePointC_X, trianglePointC_Y, Blue);
 		gdispDrawLine(trianglePointC_X, trianglePointC_Y, trianglePointA_X, trianglePointA_Y, Blue);
-
 
 		//SHOW A ROTATING CIRCLE
 		double dynamicPositionCircleX = displaySizeX/2 + distanceOfObjects * cos(anglePositionCircle); // relative to centre point of the screen X Axis
@@ -206,7 +221,16 @@ void drawTask() {
 		double dynamicPositionSquareY = displaySizeY/2 +  distanceOfObjects * sin(anglePositionSquare);
 		gdispFillArea(dynamicPositionSquareX, dynamicPositionSquareY, squareLength, squareLength, Green);
 
+		//SHOW TEXT STATIC
+		gdispDrawString(staticStringPositionX, staticStringPositionY, staticString, DejaVuSans10, Black);
 
+		//SHOW TEXT DYNAMIC
+		gdispDrawString(dynamicStringPositionX, dynamicStringPositionY, dynamicString, DejaVuSans10, Black);
+		if(!dynamicStringTmp) 
+		{
+			gdispDrawString(0, dynamicStringPositionY, &dynamicString[dynamicStringTmp], DejaVuSans10, Black); // NOT SURE
+		}
+		
 	// /* building the cave:
 	//    caveX and caveY define the top left corner of the cave
 	//     circle movment is limited by 64px from center in every direction
