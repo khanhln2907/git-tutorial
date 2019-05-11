@@ -1,0 +1,10 @@
+/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/edit_cache.dir
+/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/rebuild_cache.dir
+/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/flash.dir
+/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/ugfxlib.dir
+/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/usrlib.dir
+/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/Demo.bin.dir
+/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/stmutilitieslib.dir
+/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/rtoslib.dir
+/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/Demo.elf.dir
+/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/stmperipheralslib.dir

@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>Demo@Demo_STM_CMAKE</name>
+	<comment></comment>
+	<projects>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.cdt.make.core.makeBuilder</name>
+			<triggers>clean,full,incremental,</triggers>
+			<arguments>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.cleanBuildTarget</key>
+					<value>clean</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.enableCleanBuild</key>
+					<value>true</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.append_environment</key>
+					<value>true</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.stopOnError</key>
+					<value>true</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.enabledIncrementalBuild</key>
+					<value>true</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.build.command</key>
+					<value>/usr/bin/make</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.contents</key>
+					<value>org.eclipse.cdt.make.core.activeConfigSettings</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.build.target.inc</key>
+					<value>all</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.build.arguments</key>
+					<value>-j4</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.buildLocation</key>
+					<value>/home/khanhln/espl_workspace/Demo_STM_CMAKE</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.useDefaultBuildCmd</key>
+					<value>false</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.environment</key>
+					<value>VERBOSE=1|CMAKE_NO_VERBOSE=1|</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.enableFullBuild</key>
+					<value>true</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.build.target.auto</key>
+					<value>all</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.enableAutoBuild</key>
+					<value>false</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.build.target.clean</key>
+					<value>clean</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.fullBuildTarget</key>
+					<value>all</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.buildArguments</key>
+					<value></value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.build.location</key>
+					<value>/home/khanhln/espl_workspace/Demo_STM_CMAKE</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.make.core.autoBuildTarget</key>
+					<value>all</value>
+				</dictionary>
+				<dictionary>
+					<key>org.eclipse.cdt.core.errorOutputParser</key>
+					<value>org.eclipse.cdt.core.MakeErrorParser;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GLDErrorParser;</value>
+				</dictionary>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
+			<name>org.eclipse.cdt.make.core.ScannerConfigBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.eclipse.cdt.make.core.makeNature</nature>
+		<nature>org.eclipse.cdt.make.core.ScannerConfigNature</nature>
+		<nature>org.eclipse.cdt.core.ccnature</nature>
+		<nature>org.eclipse.cdt.core.cnature</nature>
+	</natures>
+	<linkedResources>
+		<link>
+			<name>[Subprojects]</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] ugfxlib</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] ugfxlib/</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] ugfxlib/Source Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] ugfxlib/Header Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] ugfxlib/CMake Rules</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] ugfxlib/Resources</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] ugfxlib/Object Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] usrlib</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] usrlib/</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] usrlib//startup_stm32f429_439xx.S</name>
+			<type>1</type>
+			<location>/home/khanhln/espl_workspace/Demo_STM_CMAKE/Libraries/usr/startup_stm32f429_439xx.S</location>
+		</link>
+		<link>
+			<name>[Targets]/[lib] usrlib/Source Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] usrlib/Source Files/Demo.c</name>
+			<type>1</type>
+			<location>/home/khanhln/espl_workspace/Demo_STM_CMAKE/code/Demo.c</location>
+		</link>
+		<link>
+			<name>[Targets]/[lib] usrlib/Source Files/gdisp_lld_ILI9341.c</name>
+			<type>1</type>
+			<location>/home/khanhln/espl_workspace/Demo_STM_CMAKE/Libraries/usr/gdisp_lld_ILI9341.c</location>
+		</link>
+		<link>
+			<name>[Targets]/[lib] usrlib/Source Files/ginput_lld_mouse.c</name>
+			<type>1</type>
+			<location>/home/khanhln/espl_workspace/Demo_STM_CMAKE/Libraries/usr/ginput_lld_mouse.c</location>
+		</link>
+		<link>
+			<name>[Targets]/[lib] usrlib/Source Files/ParTest.c</name>
+			<type>1</type>
+			<location>/home/khanhln/espl_workspace/Demo_STM_CMAKE/Libraries/usr/ParTest.c</location>
+		</link>
+		<link>
+			<name>[Targets]/[lib] usrlib/Source Files/port.c</name>
+			<type>1</type>
+			<location>/home/khanhln/espl_workspace/Demo_STM_CMAKE/Libraries/usr/port.c</location>
+		</link>
+		<link>
+			<name>[Targets]/[lib] usrlib/Source Files/timertest.c</name>
+			<type>1</type>
+			<location>/home/khanhln/espl_workspace/Demo_STM_CMAKE/Libraries/usr/timertest.c</location>
+		</link>
+		<link>
+			<name>[Targets]/[lib] usrlib/Source Files/system_stm32f4xx.c</name>
+			<type>1</type>
+			<location>/home/khanhln/espl_workspace/Demo_STM_CMAKE/Libraries/usr/system_stm32f4xx.c</location>
+		</link>
+		<link>
+			<name>[Targets]/[lib] usrlib/Source Files/ESPL_functions.c</name>
+			<type>1</type>
+			<location>/home/khanhln/espl_workspace/Demo_STM_CMAKE/Libraries/usr/ESPL_functions.c</location>
+		</link>
+		<link>
+			<name>[Targets]/[lib] usrlib/Header Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] usrlib/CMake Rules</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] usrlib/Resources</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] usrlib/Object Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] stmutilitieslib</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] stmutilitieslib/</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] stmutilitieslib/Source Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] stmutilitieslib/Header Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] stmutilitieslib/CMake Rules</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] stmutilitieslib/Resources</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] stmutilitieslib/Object Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] rtoslib</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] rtoslib/</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] rtoslib/Source Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] rtoslib/Header Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] rtoslib/CMake Rules</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] rtoslib/Resources</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] rtoslib/Object Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[exe] Demo.elf</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[exe] Demo.elf/</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[exe] Demo.elf/Source Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[exe] Demo.elf/Header Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[exe] Demo.elf/CMake Rules</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[exe] Demo.elf/Resources</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[exe] Demo.elf/Object Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[exe] Demo.elf/Object Files/Demo.c.o</name>
+			<type>1</type>
+			<location>/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/usrlib.dir/code/Demo.c.o</location>
+		</link>
+		<link>
+			<name>[Targets]/[exe] Demo.elf/Object Files/gdisp_lld_ILI9341.c.o</name>
+			<type>1</type>
+			<location>/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/usrlib.dir/Libraries/usr/gdisp_lld_ILI9341.c.o</location>
+		</link>
+		<link>
+			<name>[Targets]/[exe] Demo.elf/Object Files/ginput_lld_mouse.c.o</name>
+			<type>1</type>
+			<location>/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/usrlib.dir/Libraries/usr/ginput_lld_mouse.c.o</location>
+		</link>
+		<link>
+			<name>[Targets]/[exe] Demo.elf/Object Files/ParTest.c.o</name>
+			<type>1</type>
+			<location>/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/usrlib.dir/Libraries/usr/ParTest.c.o</location>
+		</link>
+		<link>
+			<name>[Targets]/[exe] Demo.elf/Object Files/port.c.o</name>
+			<type>1</type>
+			<location>/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/usrlib.dir/Libraries/usr/port.c.o</location>
+		</link>
+		<link>
+			<name>[Targets]/[exe] Demo.elf/Object Files/timertest.c.o</name>
+			<type>1</type>
+			<location>/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/usrlib.dir/Libraries/usr/timertest.c.o</location>
+		</link>
+		<link>
+			<name>[Targets]/[exe] Demo.elf/Object Files/system_stm32f4xx.c.o</name>
+			<type>1</type>
+			<location>/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/usrlib.dir/Libraries/usr/system_stm32f4xx.c.o</location>
+		</link>
+		<link>
+			<name>[Targets]/[exe] Demo.elf/Object Files/ESPL_functions.c.o</name>
+			<type>1</type>
+			<location>/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/usrlib.dir/Libraries/usr/ESPL_functions.c.o</location>
+		</link>
+		<link>
+			<name>[Targets]/[exe] Demo.elf/Object Files/startup_stm32f429_439xx.S.o</name>
+			<type>1</type>
+			<location>/home/khanhln/espl_workspace/Demo_STM_CMAKE/CMakeFiles/usrlib.dir/Libraries/usr/startup_stm32f429_439xx.S.o</location>
+		</link>
+		<link>
+			<name>[Targets]/[lib] stmperipheralslib</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] stmperipheralslib/</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] stmperipheralslib/Source Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] stmperipheralslib/Header Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] stmperipheralslib/CMake Rules</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] stmperipheralslib/Resources</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
+			<name>[Targets]/[lib] stmperipheralslib/Object Files</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+	</linkedResources>
+</projectDescription>
