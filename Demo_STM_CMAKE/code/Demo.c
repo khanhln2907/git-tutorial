@@ -9,6 +9,9 @@
  *
  */
 #include "includes.h"
+#include <math.h>
+
+#define mPI acos(-1.0)
 
 // start and stop bytes for the UART protocol
 static const uint8_t startByte = 0xAA,
@@ -34,9 +37,99 @@ int main() {
 	xTaskCreate(drawTask, "drawTask", 1000, NULL, 4, NULL);
 	xTaskCreate(checkJoystick, "checkJoystick", 1000, NULL, 3, NULL);
 
-	// Start FreeRTOS Scheduler
+	// Start FreeRTOS Schedulers
 	vTaskStartScheduler();
 }
+
+
+
+// void displayExercise2()
+// {
+// 	uint16_t circleRadius = 30;
+// 	uint16_t circleLineWidth = 5;
+// 	uint16_t circlePositionX = 50 ; // Left X Axis
+// 	uint16_t circlePositionY = (float)1/3 * displaySizeY; // 1/3 Top Y Axis
+
+// 	uint16_t triangleLength = 20;
+// 	uint16_t trianglePositionX = 2/3 * displaySizeX; // Middle X Axis
+// 	uint16_t trianglePositionY = displaySizeY;
+
+// 	uint16_t trianglePointA_X =  displaySizeX/2 -20;
+// 	uint16_t trianglePointA_Y = (float)1/3 * displaySizeY + 50;
+// 	uint16_t trianglePointB_X = displaySizeX/2 + 30;
+// 	uint16_t trianglePointB_Y = (float)1/3 * displaySizeY + 40;
+// 	uint16_t trianglePointC_X = displaySizeX/2;
+// 	uint16_t trianglePointC_Y = (float)1/3 * displaySizeY - circleRadius - 10;
+
+// 	uint16_t squareLength = 50;
+// 	uint16_t squarePositionX = displaySizeX - 80 ; // Right X Axis
+// 	uint16_t squarePositionY = (float)1/3 * displaySizeY - circleRadius;
+
+// 	gdispClear(White);
+
+// 	//STATIC
+// 	//DISPLAY A CIRCLE
+// 	gdispFillCircle(circlePositionX, circlePositionY, circleRadius, Red);
+// 	gdispFillCircle(circlePositionX, circlePositionY, circleRadius - circleLineWidth , White);
+
+// 	//DISPLAY A TRIANGLE
+// 	gdispDrawLine(trianglePointA_X, trianglePointA_Y, trianglePointB_X, trianglePointB_Y, Blue);
+// 	gdispDrawLine(trianglePointB_X, trianglePointB_Y, trianglePointC_X, trianglePointC_Y, Blue);
+// 	gdispDrawLine(trianglePointC_X, trianglePointC_Y, trianglePointA_X, trianglePointA_Y, Blue);
+
+// 	//DISPLAY A SQUARE
+// 	gdispFillArea(squarePositionX, squarePositionY, squareLength, squareLength, Green);
+
+// 	//DYNAMIC
+
+
+// }void displayExercise2()
+// {
+// 	uint16_t circleRadius = 30;
+// 	uint16_t circleLineWidth = 5;
+// 	uint16_t circlePositionX = 50 ; // Left X Axis
+// 	uint16_t circlePositionY = (float)1/3 * displaySizeY; // 1/3 Top Y Axis
+
+// 	uint16_t triangleLength = 20;
+// 	uint16_t trianglePositionX = 2/3 * displaySizeX; // Middle X Axis
+// 	uint16_t trianglePositionY = displaySizeY;
+
+// 	uint16_t trianglePointA_X =  displaySizeX/2 -20;
+// 	uint16_t trianglePointA_Y = (float)1/3 * displaySizeY + 50;
+// 	uint16_t trianglePointB_X = displaySizeX/2 + 30;
+// 	uint16_t trianglePointB_Y = (float)1/3 * displaySizeY + 40;
+// 	uint16_t trianglePointC_X = displaySizeX/2;
+// 	uint16_t trianglePointC_Y = (float)1/3 * displaySizeY - circleRadius - 10;
+
+// 	uint16_t squareLength = 50;
+// 	uint16_t squarePositionX = displaySizeX - 80 ; // Right X Axis
+// 	uint16_t squarePositionY = (float)1/3 * displaySizeY - circleRadius;
+
+// 	gdispClear(White);
+
+// 	//STATIC
+// 	//DISPLAY A CIRCLE
+// 	gdispFillCircle(circlePositionX, circlePositionY, circleRadius, Red);
+// 	gdispFillCircle(circlePositionX, circlePositionY, circleRadius - circleLineWidth , White);
+
+// 	//DISPLAY A TRIANGLE
+// 	gdispDrawLine(trianglePointA_X, trianglePointA_Y, trianglePointB_X, trianglePointB_Y, Blue);
+// 	gdispDrawLine(trianglePointB_X, trianglePointB_Y, trianglePointC_X, trianglePointC_Y, Blue);
+// 	gdispDrawLine(trianglePointC_X, trianglePointC_Y, trianglePointA_X, trianglePointA_Y, Blue);
+
+// 	//DISPLAY A SQUARE
+// 	gdispFillArea(squarePositionX, squarePositionY, squareLength, squareLength, Green);
+
+// 	//DYNAMIC
+
+
+// }
+
+
+
+
+
+
 
 /**
  * Example task which draws to the display.
@@ -48,55 +141,121 @@ void drawTask() {
 	font_t font1; // Load font for ugfx
 	font1 = gdispOpenFont("DejaVuSans24*");
 
-	/* building the cave:
-	   caveX and caveY define the top left corner of the cave
-	    circle movment is limited by 64px from center in every direction
-	    (coordinates are stored as uint8_t unsigned bytes)
-	    so, cave size is 128px */
-	const uint16_t caveX    = displaySizeX/2 - UINT8_MAX/4,
-				   caveY    = displaySizeY/2 - UINT8_MAX/4,
-				   caveSize = UINT8_MAX/2;
-	uint16_t circlePositionX = caveX,
-			 circlePositionY = caveY;
 
-	// Start endless loop
-	while(TRUE) {
-		// wait for buffer swap
-		while(xQueueReceive(JoystickQueue, &joystickPosition, 0) == pdTRUE)
-			;
+	//Initial Points and Positions
+	double anglePositionSquare = 0;
+	double anglePositionCircle = mPI;
+	double distanceOfObjects = 30; // rotating Radius aroung the triangle
 
-		// Clear background
+
+
+	uint16_t circleRadius = 10;
+	uint16_t circleLineWidth = 3;
+	uint16_t circlePositionX = displaySizeX/2 - distanceOfObjects ; // Left X Axis
+	uint16_t circlePositionY = (float)1/2 * displaySizeY; // 1/3 Top Y Axis
+
+	uint16_t trianglePointA_X =  displaySizeX/2 -15;
+	uint16_t trianglePointA_Y = (float)1/2 * displaySizeY + 40;
+	uint16_t trianglePointB_X = displaySizeX/2 + 25;
+	uint16_t trianglePointB_Y = (float)1/2 * displaySizeY + 30;
+	uint16_t trianglePointC_X = displaySizeX/2;
+	uint16_t trianglePointC_Y = (float)1/2 * displaySizeY - 20;
+
+	uint16_t squareLength = 20;
+	uint16_t squarePositionX = displaySizeX/2 + distanceOfObjects ; // Right X Axis
+	uint16_t squarePositionY = (float)1/2 * displaySizeY - circleRadius;
+
+	
+	//Start endless LOOP
+	while(1)
+	{
 		gdispClear(White);
-		// Draw rectangle "cave" for circle
-		// By default, the circle should be in the center of the display.
-		// Also, the circle can only move by 127px in both directions (position is limited to uint8_t)
-		gdispFillArea(caveX-10, caveY-10, caveSize + 20, caveSize + 20, Red);
-		// color inner white
-		gdispFillArea(caveX, caveY, caveSize, caveSize, White);
+		if(anglePositionCircle <= -2*mPI)
+		{
+			anglePositionCircle = anglePositionCircle + 2*mPI - mPI/360;
+		}
+		else
+		{
+			anglePositionCircle = anglePositionCircle + mPI/360;
+		}
+		
+		if(anglePositionSquare <= -2*mPI)
+		{
+			anglePositionSquare = anglePositionSquare + 2*mPI - mPI/360;
+		}
+		else
+		{
+			anglePositionSquare = anglePositionSquare + mPI/360;
+		}
 
-		// Generate string with current joystick values
-		sprintf( str, "Axis 1: %5d|Axis 2: %5d|VBat: %5d",
-				 ADC_GetConversionValue(ESPL_ADC_Joystick_1),
-				 ADC_GetConversionValue(ESPL_ADC_Joystick_2),
-				 ADC_GetConversionValue(ESPL_ADC_VBat) );
-		// Print string of joystick values
-		gdispDrawString(0, 0, str, font1, Black);
 
-		// Generate string with current joystick values
-		sprintf( str, "A: %d|B: %d|C %d|D: %d|E: %d|K: %d",
-				 GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A),
-				 GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B),
-				 GPIO_ReadInputDataBit(ESPL_Register_Button_C, ESPL_Pin_Button_C),
-				 GPIO_ReadInputDataBit(ESPL_Register_Button_D, ESPL_Pin_Button_D),
-				 GPIO_ReadInputDataBit(ESPL_Register_Button_E, ESPL_Pin_Button_E),
-				 GPIO_ReadInputDataBit(ESPL_Register_Button_K, ESPL_Pin_Button_K) );
-		// Print string of joystick values
-		gdispDrawString(0, 11, str, font1, Black);
+		//SHOW A TRIANGLE
+		gdispDrawLine(trianglePointA_X, trianglePointA_Y, trianglePointB_X, trianglePointB_Y, Blue);
+		gdispDrawLine(trianglePointB_X, trianglePointB_Y, trianglePointC_X, trianglePointC_Y, Blue);
+		gdispDrawLine(trianglePointC_X, trianglePointC_Y, trianglePointA_X, trianglePointA_Y, Blue);
 
-		// Draw Circle in center of square, add joystick movement
-		circlePositionX = caveX + joystickPosition.x/2;
-		circlePositionY = caveY + joystickPosition.y/2;
-		gdispFillCircle(circlePositionX, circlePositionY, 10, Green);
+
+		//SHOW A ROTATING CIRCLE
+		double dynamicPositionCircleX = displaySizeX/2 + distanceOfObjects * cos(anglePositionCircle); // relative to centre point of the screen X Axis
+		double dynamicPositionCircleY = displaySizeY/2 +  distanceOfObjects * sin(anglePositionCircle); // relative to centre point of the scree Y Axis
+		gdispFillCircle(dynamicPositionCircleX, dynamicPositionCircleY, circleRadius, Red);
+		gdispFillCircle(displaySizeX/2 + distanceOfObjects * cos(anglePositionCircle), displaySizeY/2 + distanceOfObjects * sin(anglePositionCircle), circleRadius - circleLineWidth , White);
+	
+		//SHOW A ROTATING SQUARE
+		double dynamicPositionSquareX = displaySizeX/2 + distanceOfObjects * cos(anglePositionSquare); // relative to centre point of the screen X Axis
+		double dynamicPositionSquareY = displaySizeY/2 +  distanceOfObjects * sin(anglePositionSquare);
+		gdispFillArea(dynamicPositionSquareX, dynamicPositionSquareY, squareLength, squareLength, Green);
+
+
+	// /* building the cave:
+	//    caveX and caveY define the top left corner of the cave
+	//     circle movment is limited by 64px from center in every direction
+	//     (coordinates are stored as uint8_t unsigned bytes)
+	//     so, cave size is 128px */
+	// const uint16_t caveX    = displaySizeX/2 - UINT8_MAX/4,
+	// 			   caveY    = displaySizeY/2 - UINT8_MAX/4,
+	// 			   caveSize = UINT8_MAX/2;
+	// uint16_t circlePositionX = caveX,
+	// 		 circlePositionY = caveY;
+
+	// // Start endless loop
+	// while(TRUE) {
+	// 	// wait for buffer swap
+	// 	while(xQueueReceive(JoystickQueue, &joystickPosition, 0) == pdTRUE)
+	// 		;
+
+	// 	// Clear background
+	// 	gdispClear(White);
+	// 	// Draw rectangle "cave" for circle
+	// 	// By default, the circle should be in the center of the display.
+	// 	// Also, the circle can only move by 127px in both directions (position is limited to uint8_t)
+	// 	gdispFillArea(caveX-10, caveY-10, caveSize + 20, caveSize + 20, Red);
+	// 	// color inner white
+	// 	gdispFillArea(caveX, caveY, caveSize, caveSize, White);
+
+	// 	// Generate string with current joystick values
+	// 	sprintf( str, "Axis 1: %5d|Axis 2: %5d|VBat: %5d",
+	// 			 ADC_GetConversionValue(ESPL_ADC_Joystick_1),
+	// 			 ADC_GetConversionValue(ESPL_ADC_Joystick_2),
+	// 			 ADC_GetConversionValue(ESPL_ADC_VBat) );
+	// 	// Print string of joystick values
+	// 	gdispDrawString(0, 0, str, font1, Black);
+
+	// 	// Generate string with current joystick values
+	// 	sprintf( str, "A: %d|B: %d|C %d|D: %d|E: %d|K: %d",
+	// 			 GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A),
+	// 			 GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B),
+	// 			 GPIO_ReadInputDataBit(ESPL_Register_Button_C, ESPL_Pin_Button_C),
+	// 			 GPIO_ReadInputDataBit(ESPL_Register_Button_D, ESPL_Pin_Button_D),
+	// 			 GPIO_ReadInputDataBit(ESPL_Register_Button_E, ESPL_Pin_Button_E),
+	// 			 GPIO_ReadInputDataBit(ESPL_Register_Button_K, ESPL_Pin_Button_K) );
+	// 	// Print string of joystick values
+	// 	gdispDrawString(0, 11, str, font1, Black);
+
+	// 	// Draw Circle in center of square, add joystick movement
+	// 	circlePositionX = caveX + joystickPosition.x/2;
+	// 	circlePositionY = caveY + joystickPosition.y/2;
+	// 	gdispFillCircle(circlePositionX, circlePositionY, 10, Green);
 
 		// Wait for display to stop writing
 		xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
