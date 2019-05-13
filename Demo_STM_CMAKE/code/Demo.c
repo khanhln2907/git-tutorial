@@ -20,11 +20,17 @@ static const uint8_t startByte = 0xAA,
 static const uint16_t displaySizeX = 320,
 					  displaySizeY = 240;
 
+//relative Position of Joystick
+int relativeJoystickPositionX = 0;
+int relativeJoystickPositionY = 0;
+
 QueueHandle_t ESPL_RxQueue; // Already defined in ESPL_Functions.h
 SemaphoreHandle_t ESPL_DisplayReady;
 
 // Stores lines to be drawn
 QueueHandle_t JoystickQueue;
+
+
 
 int main() {
 	// Initialize Board functions and graphics
@@ -162,8 +168,13 @@ void drawTask() {
 //	// Start endless loop
 
 while(TRUE) {
+	//		// wait for buffer swap
+	while(xQueueReceive(JoystickQueue, &joystickPosition, 0) == pdTRUE)
+			;
 	gdispClear(White);
-	//2.1 EXERCISE 3 FIGURES ------------------------------------------------------------------------------------------------
+
+	//EXERCISE 2
+	//2.1 EXERCISE 3 FIGURES ----------------------------------------------------------------------------------------------------------------
 	//Calculating new angle for figures
 	if(anglePositionCircle <= -2*mPI)
 	{
@@ -197,11 +208,22 @@ while(TRUE) {
 //	stringTmp += dynamicStringTmp;
 //
 
+	//CALIBRATING JOYSTICKPOSITION
+	if (((abs(joystickPosition.x - 127)/2) >= 10) | ((abs(joystickPosition.y - 127)/2) >= 10)) // Avoid noise
+	{
+		relativeJoystickPositionX = (joystickPosition.x - 127)/2; // relative position for programmer, 2 is the moving speed
+		relativeJoystickPositionY = (joystickPosition.y - 127)/2;
+	}
+	else
+	{
+		relativeJoystickPositionX = 0;
+		relativeJoystickPositionY = 0;
+	}
 
 	//SHOW A TRIANGLE
-	gdispDrawLine(trianglePointA_X, trianglePointA_Y, trianglePointB_X, trianglePointB_Y, Blue);
-	gdispDrawLine(trianglePointB_X, trianglePointB_Y, trianglePointC_X, trianglePointC_Y, Blue);
-	gdispDrawLine(trianglePointC_X, trianglePointC_Y, trianglePointA_X, trianglePointA_Y, Blue);
+	gdispDrawLine(trianglePointA_X + relativeJoystickPositionX, trianglePointA_Y + relativeJoystickPositionY, trianglePointB_X + relativeJoystickPositionX, trianglePointB_Y + relativeJoystickPositionY, Blue);
+	gdispDrawLine(trianglePointB_X + relativeJoystickPositionX, trianglePointB_Y + relativeJoystickPositionY, trianglePointC_X + relativeJoystickPositionX, trianglePointC_Y + relativeJoystickPositionY, Blue);
+	gdispDrawLine(trianglePointC_X + relativeJoystickPositionX, trianglePointC_Y + relativeJoystickPositionY, trianglePointA_X + relativeJoystickPositionX, trianglePointA_Y + relativeJoystickPositionY, Blue);
 
 	//DRAW MIDDLE POINT
 	gdispDrawPixel(160, 120, Red);
@@ -209,19 +231,19 @@ while(TRUE) {
 	//SHOW A ROTATING CIRCLE
 	double dynamicPositionCircleX = displaySizeX/2 + distanceOfObjects * cos(anglePositionCircle); // relative to centre point of the screen X Axis
 	double dynamicPositionCircleY = displaySizeY/2 + distanceOfObjects * sin(anglePositionCircle); // relative to centre point of the scree Y Axis
-	gdispFillCircle(dynamicPositionCircleX, dynamicPositionCircleY, circleRadius, Red);
-	gdispFillCircle(displaySizeX/2 + distanceOfObjects * cos(anglePositionCircle), displaySizeY/2 + distanceOfObjects * sin(anglePositionCircle), circleRadius - circleLineWidth , White);
+	gdispFillCircle(dynamicPositionCircleX + relativeJoystickPositionX, dynamicPositionCircleY + relativeJoystickPositionY, circleRadius, Red);
+	gdispFillCircle(dynamicPositionCircleX + relativeJoystickPositionX, dynamicPositionCircleY + relativeJoystickPositionY, circleRadius - circleLineWidth , White);
 
 	//SHOW A ROTATING SQUARE
 	double dynamicPositionSquareX = displaySizeX/2 - squareLength/2 + distanceOfObjects * cos(anglePositionSquare);  // relative to centre point of the screen X Axis
 	double dynamicPositionSquareY = displaySizeY/2 - squareLength/2 + distanceOfObjects * sin(anglePositionSquare);
-	gdispFillArea(dynamicPositionSquareX, dynamicPositionSquareY, squareLength, squareLength, Green);
+	gdispFillArea(dynamicPositionSquareX + relativeJoystickPositionX, dynamicPositionSquareY + relativeJoystickPositionY, squareLength, squareLength, Green);
 
 	//SHOW TEXT STATIC
-	gdispDrawString(staticStringPositionX, staticStringPositionY, staticString, font1, Black);
+	gdispDrawString(staticStringPositionX + relativeJoystickPositionX, staticStringPositionY + relativeJoystickPositionY, staticString, font1, Black);
 
 	//SHOW TEXT DYNAMIC
-	gdispDrawString(dynamicStringPositionX, dynamicStringPositionY, dynamicString, font1, Black);
+	gdispDrawString(dynamicStringPositionX + relativeJoystickPositionX, dynamicStringPositionY + relativeJoystickPositionY, dynamicString, font1, Black);
 //	if(dynamicStringTmp > 0)
 //	{
 //		gdispDrawString(0, dynamicStringPositionY, *stringTmp, font1, Black); // NOT SURE
@@ -229,7 +251,7 @@ while(TRUE) {
 //		//while(1);
 //	}
 
-//2.2 BUTTON EXERCISE --------------------------------------------------------------------------------------------------
+	//2.2 BUTTON EXERCISE ---------------------------------------------------------------------------------------------------------------------
 	if(!GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A))
 	{
 		while(!GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A));
@@ -265,31 +287,30 @@ while(TRUE) {
 			 GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B), cntB,
 			 GPIO_ReadInputDataBit(ESPL_Register_Button_C, ESPL_Pin_Button_C), cntC,
 			 GPIO_ReadInputDataBit(ESPL_Register_Button_D, ESPL_Pin_Button_D), cntD);
-	sprintf( str2, "E: %d|K: %d",
+	sprintf( str2, "E: %d|K: %d|X: %d, Y: %d",
 			GPIO_ReadInputDataBit(ESPL_Register_Button_E, ESPL_Pin_Button_E),
-			GPIO_ReadInputDataBit(ESPL_Register_Button_K, ESPL_Pin_Button_K));
+			GPIO_ReadInputDataBit(ESPL_Register_Button_K, ESPL_Pin_Button_K),
+			joystickPosition.x, joystickPosition.y);
 	// Print string of joystick values
-	gdispDrawString(0, 0, str, font1, Black);
-	gdispDrawString(0, 15, str2, font1, Black);
+	gdispDrawString(0 + relativeJoystickPositionX, 0 + relativeJoystickPositionY, str, font1, Black);
+	gdispDrawString(0 + relativeJoystickPositionX, 15 + relativeJoystickPositionY, str2, font1, Black);
 
 
-//2.3 JOYSTICK ------------------------------------------------------------------------------------------------
-		// Generate string with current joystick values
-		sprintf( str, "Axis 1: %5d|Axis 2: %5d|VBat: %5d",
-				 ADC_GetConversionValue(ESPL_ADC_Joystick_1),
-				 ADC_GetConversionValue(ESPL_ADC_Joystick_2),
-				 ADC_GetConversionValue(ESPL_ADC_VBat) );
+	//2.3 JOYSTICK -----------------------------------------------------------------------------------------------------------------------
+	// Generate string with current joystick values
+	sprintf( str, "Axis 1: %5d|Axis 2: %5d|VBat: %5d",
+			 ADC_GetConversionValue(ESPL_ADC_Joystick_1),
+			 ADC_GetConversionValue(ESPL_ADC_Joystick_2),
+			 ADC_GetConversionValue(ESPL_ADC_VBat) );
 
-		//ADDING THESE VALUES TO MOVE SCREEN
-		//joystickPosition.x/2
-		//joystickPosition.y/2
+	//ADDING THESE VALUES TO MOVE SCREEN
+	//joystickPosition.x/2
+	//joystickPosition.y/2
 
-		// Print string of joystick values
-		gdispDrawString(0, 30, str, font1, Black);
+	// Print string of joystick values
+	gdispDrawString(0 + relativeJoystickPositionX, 30 + relativeJoystickPositionY, str, font1, Black);
 
-//		// wait for buffer swap
-//		while(xQueueReceive(JoystickQueue, &joystickPosition, 0) == pdTRUE)
-//			;
+
 //
 //		// Clear background
 //		gdispClear(White);
