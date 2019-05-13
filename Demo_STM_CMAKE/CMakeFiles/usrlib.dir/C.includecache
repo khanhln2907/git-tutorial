@@ -125,6 +125,10 @@ stm32f4xx_tim.h
 /DIST/home/lab_espl_stud10/espl_workspace/Demo_STM_CMAKE/code/Demo.c
 includes.h
 /DIST/home/lab_espl_stud10/espl_workspace/Demo_STM_CMAKE/code/includes.h
+math.h
+-
+string.h
+-
 
 Libraries/FreeRTOS/FreeRTOS/Demo/Common/include/partest.h
 

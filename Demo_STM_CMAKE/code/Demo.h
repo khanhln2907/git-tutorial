@@ -19,6 +19,7 @@ void sendLine(struct coord coord_1, struct coord coord_2);
 void checkJoystick();
 void drawTask();
 void displayExercise2();
+void calculateNewPosition(uint16_t rotatingPointX, uint16_t rotatingPointY, uint16_t* positionX, uint16_t* positionY);
 
 
 #endif
