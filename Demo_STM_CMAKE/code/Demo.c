@@ -42,63 +42,75 @@ int main() {
 	JoystickQueue = xQueueCreate(100, 2 * sizeof(char));
 
 	// Initializes Tasks with their respective priority
-	xTaskCreate(drawTask, "drawTask", 1000, NULL, 4, NULL);
+	//xTaskCreate(drawTask, "drawTask", 1000, NULL, 4, NULL);
 	xTaskCreate(checkJoystick, "checkJoystick", 1000, NULL, 3, NULL);
+	xTaskCreate(exercise3, "exercise3", 1000, NULL, 4, NULL);
 
 	// Start FreeRTOS Scheduler
 	vTaskStartScheduler();
 
 }
 
-void calculateNewPosition(uint16_t rotatingPointX, uint16_t rotatingPointY, uint16_t* positionX, uint16_t* positionY)
-{
-	// CALCUALTING THE OLD ANGLE
-	double pi = acos(-1.0);
-	double rotatingAngle = 2* pi / 360 /8; //rotate 1 Grad each time
-
-	double angle = atan((abs(rotatingPointY - *positionY))/(abs(rotatingPointX - *positionX)));
-	if(rotatingPointX - *positionX > 0)
-	{
-		;
-	}
-	else if(((rotatingPointX - *positionX) < 0) && ((rotatingPointY - *positionY)>= 0))
-	{
-		angle = angle + pi;
-	}
-	else if(((rotatingPointX - *positionX) < 0) && ((rotatingPointY - *positionY)< 0))
-	{
-		angle = angle - pi;
-	}
-	else ;
-
-	// Here is the problem
-	//double rotatingRadius = sqrt(abs(((double) rotatingPointX - (double) *positionX) * ((double) rotatingPointX - (double) *positionX) + ((double) rotatingPointY - (double) *positionY)*((double)rotatingPointY - (double)*positionY)));
-
-	double rotatingRadius = 40;
-	angle = angle + rotatingAngle; // Change the angle each time rotating
-
-	*positionX = *positionX + rotatingRadius*cos(angle);
-	*positionY = *positionY + rotatingRadius*sin(angle);
-
-}
-
-void displayExercise2()
-{
-
-
-//	gdispClear(White);
-//	// DISPLAY A CIRCLE
-//	gdispFillCircle(circlePositionX, circlePositionY, circleRadius, Red);
-//	gdispFillCircle(circlePositionX, circlePositionY, circleRadius - circleLineWidth , White);
+//void calculateNewPosition(uint16_t rotatingPointX, uint16_t rotatingPointY, uint16_t* positionX, uint16_t* positionY)
+//{
+//	// CALCUALTING THE OLD ANGLE
+//	double pi = acos(-1.0);
+//	double rotatingAngle = 2* pi / 360 /8; //rotate 1 Grad each time
 //
-//	//DISPLAY A TRIANGLE
-//	gdispDrawLine(trianglePointA_X, trianglePointA_Y, trianglePointB_X, trianglePointB_Y, Blue);
-//	gdispDrawLine(trianglePointB_X, trianglePointB_Y, trianglePointC_X, trianglePointC_Y, Blue);
-//	gdispDrawLine(trianglePointC_X, trianglePointC_Y, trianglePointA_X, trianglePointA_Y, Blue);
+//	double angle = atan((abs(rotatingPointY - *positionY))/(abs(rotatingPointX - *positionX)));
+//	if(rotatingPointX - *positionX > 0)
+//	{
+//		;
+//	}
+//	else if(((rotatingPointX - *positionX) < 0) && ((rotatingPointY - *positionY)>= 0))
+//	{
+//		angle = angle + pi;
+//	}
+//	else if(((rotatingPointX - *positionX) < 0) && ((rotatingPointY - *positionY)< 0))
+//	{
+//		angle = angle - pi;
+//	}
+//	else ;
 //
-//	//DISPLAY A SQUARE
-//	gdispFillArea(squarePositionX, squarePositionY, squareLength, squareLength, Green);
+//	// Here is the problem
+//	//double rotatingRadius = sqrt(abs(((double) rotatingPointX - (double) *positionX) * ((double) rotatingPointX - (double) *positionX) + ((double) rotatingPointY - (double) *positionY)*((double)rotatingPointY - (double)*positionY)));
+//
+//	double rotatingRadius = 40;
+//	angle = angle + rotatingAngle; // Change the angle each time rotating
+//
+//	*positionX = *positionX + rotatingRadius*cos(angle);
+//	*positionY = *positionY + rotatingRadius*sin(angle);
+//
+//}
 
+void exercise3()
+{
+	//if(!GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A))
+	gdispClear(White);
+	font_t font1; // Load font for ugfx
+	font1 = gdispOpenFont("DejaVuSans24*");
+
+	TickType_t xLastWakeTime;
+	xLastWakeTime = xTaskGetTickCount();
+	const TickType_t tickFramerate = 20;
+	char str[100]; // buffer for messages to draw to display
+	while(1)
+	{
+		gdispClear(White);
+		sprintf(str, "A: %d |B: %d |C: %d |D: %d",
+						 GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A),
+						 GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B),
+						 GPIO_ReadInputDataBit(ESPL_Register_Button_C, ESPL_Pin_Button_C),
+						 GPIO_ReadInputDataBit(ESPL_Register_Button_D, ESPL_Pin_Button_D));
+		gdispDrawString(0, 0, str, font1, Black);
+
+		// Wait for display to stop writing
+		xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
+		// swap buffers
+		ESPL_DrawLayer();
+
+		vTaskDelayUntil(&xLastWakeTime, tickFramerate); //NEED TO ASK TUTOR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+	}
 }
 
 
@@ -167,148 +179,144 @@ void drawTask() {
 //
 //	// Start endless loop
 
-while(TRUE) {
-	//		// wait for buffer swap
-	while(xQueueReceive(JoystickQueue, &joystickPosition, 0) == pdTRUE)
-			;
-	gdispClear(White);
+	while(TRUE) {
+		//		// wait for buffer swap
+		while(xQueueReceive(JoystickQueue, &joystickPosition, 0) == pdTRUE)
+				;
+		gdispClear(White);
 
-	//EXERCISE 2
-	//2.1 EXERCISE 3 FIGURES ----------------------------------------------------------------------------------------------------------------
-	//Calculating new angle for figures
-	if(anglePositionCircle <= -2*mPI)
-	{
-		anglePositionCircle = anglePositionCircle + 2*mPI - mPI/360;
-	}
-	else
-	{
-		anglePositionCircle = anglePositionCircle + mPI/360;
-	}
+		//EXERCISE 2
+		//2.1 EXERCISE 3 FIGURES ----------------------------------------------------------------------------------------------------------------
+		//Calculating new angle for figures
+		if(anglePositionCircle <= -2*mPI)
+		{
+			anglePositionCircle = anglePositionCircle + 2*mPI - mPI/360;
+		}
+		else
+		{
+			anglePositionCircle = anglePositionCircle + mPI/360;
+		}
 
-	if(anglePositionSquare <= -2*mPI)
-	{
-		anglePositionSquare = anglePositionSquare + 2*mPI - mPI/360;
-	}
-	else
-	{
-		anglePositionSquare = anglePositionSquare + mPI/360;
-	}
+		if(anglePositionSquare <= -2*mPI)
+		{
+			anglePositionSquare = anglePositionSquare + 2*mPI - mPI/360;
+		}
+		else
+		{
+			anglePositionSquare = anglePositionSquare + mPI/360;
+		}
 
-	//Calculating new position for the dynamic string
-	dynamicStringPositionX = (dynamicStringPositionX + 1) % displaySizeX;
-//	if(abs((double)displaySizeX-(double)dynamicStringPositionX) < 10)
-//	{
-//		dynamicStringTmp = displaySizeX - dynamicStringPositionX; // Calculate the start index which will not be shown on display
-//	}
-//	else
-//	{
-//		dynamicStringTmp = 0;
-//	}
-//	char *stringTmp = dynamicString; CHECK LATER
-//	stringTmp += dynamicStringTmp;
-//
+		//Calculating new position for the dynamic string
+		dynamicStringPositionX = (dynamicStringPositionX + 1) % displaySizeX;
+	//	if(abs((double)displaySizeX-(double)dynamicStringPositionX) < 10)
+	//	{
+	//		dynamicStringTmp = displaySizeX - dynamicStringPositionX; // Calculate the start index which will not be shown on display
+	//	}
+	//	else
+	//	{
+	//		dynamicStringTmp = 0;
+	//	}
+	//	char *stringTmp = dynamicString; CHECK LATER
+	//	stringTmp += dynamicStringTmp;
+	//
 
-	//CALIBRATING JOYSTICKPOSITION
-	if (((abs(joystickPosition.x - 127)/2) >= 10) | ((abs(joystickPosition.y - 127)/2) >= 10)) // Avoid noise
-	{
-		relativeJoystickPositionX = (joystickPosition.x - 127)/2; // relative position for programmer, 2 is the moving speed
-		relativeJoystickPositionY = (joystickPosition.y - 127)/2;
-	}
-	else
-	{
-		relativeJoystickPositionX = 0;
-		relativeJoystickPositionY = 0;
-	}
+		//CALIBRATING JOYSTICKPOSITION
+		if (((abs(joystickPosition.x - 127)/2) >= 10) | ((abs(joystickPosition.y - 127)/2) >= 10)) // Avoid noise
+		{
+			relativeJoystickPositionX = (joystickPosition.x - 127)/8; // relative position for programmer, 2 is the moving speed
+			relativeJoystickPositionY = (joystickPosition.y - 127)/2;
+		}
+		else
+		{
+			relativeJoystickPositionX = 0;
+			relativeJoystickPositionY = 0;
+		}
 
-	//SHOW A TRIANGLE
-	gdispDrawLine(trianglePointA_X + relativeJoystickPositionX, trianglePointA_Y + relativeJoystickPositionY, trianglePointB_X + relativeJoystickPositionX, trianglePointB_Y + relativeJoystickPositionY, Blue);
-	gdispDrawLine(trianglePointB_X + relativeJoystickPositionX, trianglePointB_Y + relativeJoystickPositionY, trianglePointC_X + relativeJoystickPositionX, trianglePointC_Y + relativeJoystickPositionY, Blue);
-	gdispDrawLine(trianglePointC_X + relativeJoystickPositionX, trianglePointC_Y + relativeJoystickPositionY, trianglePointA_X + relativeJoystickPositionX, trianglePointA_Y + relativeJoystickPositionY, Blue);
+		//SHOW A TRIANGLE
+		gdispDrawLine(trianglePointA_X + relativeJoystickPositionX, trianglePointA_Y + relativeJoystickPositionY, trianglePointB_X + relativeJoystickPositionX, trianglePointB_Y + relativeJoystickPositionY, Blue);
+		gdispDrawLine(trianglePointB_X + relativeJoystickPositionX, trianglePointB_Y + relativeJoystickPositionY, trianglePointC_X + relativeJoystickPositionX, trianglePointC_Y + relativeJoystickPositionY, Blue);
+		gdispDrawLine(trianglePointC_X + relativeJoystickPositionX, trianglePointC_Y + relativeJoystickPositionY, trianglePointA_X + relativeJoystickPositionX, trianglePointA_Y + relativeJoystickPositionY, Blue);
 
-	//DRAW MIDDLE POINT
-	gdispDrawPixel(160, 120, Red);
+		//DRAW MIDDLE POINT
+		gdispDrawPixel(160, 120, Red);
 
-	//SHOW A ROTATING CIRCLE
-	double dynamicPositionCircleX = displaySizeX/2 + distanceOfObjects * cos(anglePositionCircle); // relative to centre point of the screen X Axis
-	double dynamicPositionCircleY = displaySizeY/2 + distanceOfObjects * sin(anglePositionCircle); // relative to centre point of the scree Y Axis
-	gdispFillCircle(dynamicPositionCircleX + relativeJoystickPositionX, dynamicPositionCircleY + relativeJoystickPositionY, circleRadius, Red);
-	gdispFillCircle(dynamicPositionCircleX + relativeJoystickPositionX, dynamicPositionCircleY + relativeJoystickPositionY, circleRadius - circleLineWidth , White);
+		//SHOW A ROTATING CIRCLE
+		double dynamicPositionCircleX = displaySizeX/2 + distanceOfObjects * cos(anglePositionCircle); // relative to centre point of the screen X Axis
+		double dynamicPositionCircleY = displaySizeY/2 + distanceOfObjects * sin(anglePositionCircle); // relative to centre point of the scree Y Axis
+		gdispFillCircle(dynamicPositionCircleX + relativeJoystickPositionX, dynamicPositionCircleY + relativeJoystickPositionY, circleRadius, Red);
+		gdispFillCircle(dynamicPositionCircleX + relativeJoystickPositionX, dynamicPositionCircleY + relativeJoystickPositionY, circleRadius - circleLineWidth , White);
 
-	//SHOW A ROTATING SQUARE
-	double dynamicPositionSquareX = displaySizeX/2 - squareLength/2 + distanceOfObjects * cos(anglePositionSquare);  // relative to centre point of the screen X Axis
-	double dynamicPositionSquareY = displaySizeY/2 - squareLength/2 + distanceOfObjects * sin(anglePositionSquare);
-	gdispFillArea(dynamicPositionSquareX + relativeJoystickPositionX, dynamicPositionSquareY + relativeJoystickPositionY, squareLength, squareLength, Green);
+		//SHOW A ROTATING SQUARE
+		double dynamicPositionSquareX = displaySizeX/2 - squareLength/2 + distanceOfObjects * cos(anglePositionSquare);  // relative to centre point of the screen X Axis
+		double dynamicPositionSquareY = displaySizeY/2 - squareLength/2 + distanceOfObjects * sin(anglePositionSquare);
+		gdispFillArea(dynamicPositionSquareX + relativeJoystickPositionX, dynamicPositionSquareY + relativeJoystickPositionY, squareLength, squareLength, Green);
 
-	//SHOW TEXT STATIC
-	gdispDrawString(staticStringPositionX + relativeJoystickPositionX, staticStringPositionY + relativeJoystickPositionY, staticString, font1, Black);
+		//SHOW TEXT STATIC
+		gdispDrawString(staticStringPositionX + relativeJoystickPositionX, staticStringPositionY + relativeJoystickPositionY, staticString, font1, Black);
 
-	//SHOW TEXT DYNAMIC
-	gdispDrawString(dynamicStringPositionX + relativeJoystickPositionX, dynamicStringPositionY + relativeJoystickPositionY, dynamicString, font1, Black);
-//	if(dynamicStringTmp > 0)
-//	{
-//		gdispDrawString(0, dynamicStringPositionY, *stringTmp, font1, Black); // NOT SURE
-//		gdispDrawString(staticStringPositionX, staticStringPositionY -10 , staticString, font1, Black);
-//		//while(1);
-//	}
+		//SHOW TEXT DYNAMIC
+		gdispDrawString(dynamicStringPositionX + relativeJoystickPositionX, dynamicStringPositionY + relativeJoystickPositionY, dynamicString, font1, Black);
+	//	if(dynamicStringTmp > 0)
+	//	{
+	//		gdispDrawString(0, dynamicStringPositionY, *stringTmp, font1, Black); // NOT SURE
+	//		gdispDrawString(staticStringPositionX, staticStringPositionY -10 , staticString, font1, Black);
+	//		//while(1);
+	//	}
 
-	//2.2 BUTTON EXERCISE ---------------------------------------------------------------------------------------------------------------------
-	if(!GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A))
-	{
-		while(!GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A));
-		cntA++;
-	}
-	if(!GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B))
-	{
-		while(!GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B));
-		cntB++;
-	}
-	if(!GPIO_ReadInputDataBit(ESPL_Register_Button_C, ESPL_Pin_Button_C))
-	{
-		while(!GPIO_ReadInputDataBit(ESPL_Register_Button_C, ESPL_Pin_Button_C));
-		cntC++;
-	}
-	if(!GPIO_ReadInputDataBit(ESPL_Register_Button_D, ESPL_Pin_Button_D))
-	{
-		while(!GPIO_ReadInputDataBit(ESPL_Register_Button_D, ESPL_Pin_Button_D));
-		cntD++;
-	}
-	if(!GPIO_ReadInputDataBit(ESPL_Register_Button_K, ESPL_Pin_Button_K))
-	{
-		while(!GPIO_ReadInputDataBit(ESPL_Register_Button_K, ESPL_Pin_Button_K));
-		cntA = 0;
-		cntB = 0;
-		cntC = 0;
-		cntD = 0;
-	}
+		//2.2 BUTTON EXERCISE ---------------------------------------------------------------------------------------------------------------------
+		if(!GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A))
+		{
+			while(!GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A));
+			cntA++;
+		}
+		if(!GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B))
+		{
+			while(!GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B));
+			cntB++;
+		}
+		if(!GPIO_ReadInputDataBit(ESPL_Register_Button_C, ESPL_Pin_Button_C))
+		{
+			while(!GPIO_ReadInputDataBit(ESPL_Register_Button_C, ESPL_Pin_Button_C));
+			cntC++;
+		}
+		if(!GPIO_ReadInputDataBit(ESPL_Register_Button_D, ESPL_Pin_Button_D))
+		{
+			while(!GPIO_ReadInputDataBit(ESPL_Register_Button_D, ESPL_Pin_Button_D));
+			cntD++;
+		}
+		if(!GPIO_ReadInputDataBit(ESPL_Register_Button_K, ESPL_Pin_Button_K))
+		{
+			while(!GPIO_ReadInputDataBit(ESPL_Register_Button_K, ESPL_Pin_Button_K));
+			cntA = 0;
+			cntB = 0;
+			cntC = 0;
+			cntD = 0;
+		}
 
-	// Generate string with current joystick values
-	sprintf( str, "A: %d, #: %d |B: %d, #: %d |C %d, #: %d |D: %d, #: %d",
-			 GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A), cntA,
-			 GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B), cntB,
-			 GPIO_ReadInputDataBit(ESPL_Register_Button_C, ESPL_Pin_Button_C), cntC,
-			 GPIO_ReadInputDataBit(ESPL_Register_Button_D, ESPL_Pin_Button_D), cntD);
-	sprintf( str2, "E: %d|K: %d|X: %d, Y: %d",
-			GPIO_ReadInputDataBit(ESPL_Register_Button_E, ESPL_Pin_Button_E),
-			GPIO_ReadInputDataBit(ESPL_Register_Button_K, ESPL_Pin_Button_K),
-			joystickPosition.x, joystickPosition.y);
-	// Print string of joystick values
-	gdispDrawString(0 + relativeJoystickPositionX, 0 + relativeJoystickPositionY, str, font1, Black);
-	gdispDrawString(0 + relativeJoystickPositionX, 15 + relativeJoystickPositionY, str2, font1, Black);
+		// Generate string with current joystick values
+		sprintf( str, "A: %d, #: %d |B: %d, #: %d |C %d, #: %d |D: %d, #: %d",
+				 GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A), cntA,
+				 GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B), cntB,
+				 GPIO_ReadInputDataBit(ESPL_Register_Button_C, ESPL_Pin_Button_C), cntC,
+				 GPIO_ReadInputDataBit(ESPL_Register_Button_D, ESPL_Pin_Button_D), cntD);
+		sprintf( str2, "E: %d|K: %d|X: %d, Y: %d",
+				GPIO_ReadInputDataBit(ESPL_Register_Button_E, ESPL_Pin_Button_E),
+				GPIO_ReadInputDataBit(ESPL_Register_Button_K, ESPL_Pin_Button_K),
+				joystickPosition.x, joystickPosition.y);
+		// Print string of joystick values
+		gdispDrawString(0 + relativeJoystickPositionX, 0 + relativeJoystickPositionY, str, font1, Black);
+		gdispDrawString(0 + relativeJoystickPositionX, 15 + relativeJoystickPositionY, str2, font1, Black);
 
 
-	//2.3 JOYSTICK -----------------------------------------------------------------------------------------------------------------------
-	// Generate string with current joystick values
-	sprintf( str, "Axis 1: %5d|Axis 2: %5d|VBat: %5d",
-			 ADC_GetConversionValue(ESPL_ADC_Joystick_1),
-			 ADC_GetConversionValue(ESPL_ADC_Joystick_2),
-			 ADC_GetConversionValue(ESPL_ADC_VBat) );
+		//2.3 JOYSTICK -----------------------------------------------------------------------------------------------------------------------
+		// Generate string with current joystick values
+		sprintf( str, "Axis 1: %5d|Axis 2: %5d|VBat: %5d",
+				 ADC_GetConversionValue(ESPL_ADC_Joystick_1),
+				 ADC_GetConversionValue(ESPL_ADC_Joystick_2),
+				 ADC_GetConversionValue(ESPL_ADC_VBat) );
 
-	//ADDING THESE VALUES TO MOVE SCREEN
-	//joystickPosition.x/2
-	//joystickPosition.y/2
-
-	// Print string of joystick values
-	gdispDrawString(0 + relativeJoystickPositionX, 30 + relativeJoystickPositionY, str, font1, Black);
+		// Print string of joystick values
+		gdispDrawString(0 + relativeJoystickPositionX, 30 + relativeJoystickPositionY, str, font1, Black);
 
 
 //
@@ -354,7 +362,7 @@ while(TRUE) {
 		// swap buffers
 		ESPL_DrawLayer();
 
-		vTaskDelayUntil(&xLastWakeTime, tickFramerate);
+		vTaskDelayUntil(&xLastWakeTime, tickFramerate); //NEED TO ASK TUTOR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
 
 	}
 }
