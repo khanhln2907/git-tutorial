@@ -20,6 +20,12 @@ void checkJoystick();
 void drawTask();
 void displayExercise2();
 void calculateNewPosition(uint16_t rotatingPointX, uint16_t rotatingPointY, uint16_t* positionX, uint16_t* positionY);
-
+void exercise3();
+checkButtonA();
+checkButtonB();
+checkButtonC();
+checkButtonD();
+checkButtonE();
+checkButtonK();
 
 #endif
