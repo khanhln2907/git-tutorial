@@ -20,11 +20,10 @@ static const uint8_t startByte = 0xAA, stopByte = 0x55;
 
 static const uint16_t displaySizeX = 320, displaySizeY = 240;
 
+//State Machine
 unsigned int state = 1;
 
 //relative Position of Joystick
-int relativeJoystickPositionX = 0;
-int relativeJoystickPositionY = 0;
 unsigned char tmpA = 1;
 unsigned char buttonStateA = 0;
 unsigned char tmpB = 1;
@@ -55,16 +54,82 @@ int main() {
 	JoystickQueue = xQueueCreate(100, 2 * sizeof(char));
 
 	// Initializes Tasks with their respective priority
-	xTaskCreate(drawTask, "drawTask", 1000, NULL, 4, NULL);
-	xTaskCreate(checkJoystick, "checkJoystick", 1000, NULL, 3, NULL);
-	xTaskCreate(exercise3, "exercise3", 1000, NULL, 5, NULL);
+	//xTaskCreate(drawTask, "drawTask", 1000, NULL, 5, NULL);
+	//xTaskCreate(checkJoystick, "checkJoystick", 1000, NULL, 3, NULL);
+	//xTaskCreate(changeState, "changeState", 1000, NULL, 4, NULL);
+	xTaskCreate(staticTask, "staticTask", 1000, NULL, 4, NULL);
+	xTaskCreate(dynamicTask, "dynamicTask", 1000, NULL, 3, NULL);
 
 	// Start FreeRTOS Scheduler
 	vTaskStartScheduler();
+}
+
+void staticTask()
+{
+	TickType_t xLastWakeTime;
+	xLastWakeTime = xTaskGetTickCount();
+	const TickType_t tickFramerate = 500;
+
+	uint16_t circleRadius = 50;
+	uint16_t circleLineWidth = 3;
+
+	while(1)
+	{
+		gdispClear(White);
+		gdispFillCircle(displaySizeX/2 -50 ,displaySizeY/2 , circleRadius, Red);
+		gdispFillCircle(displaySizeX/2 -50 ,displaySizeY/2 , circleRadius - circleLineWidth, White);
+
+		// Wait for display to stop writing
+		xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
+		// swap buffers
+		ESPL_DrawLayer();
+
+		vTaskDelay(450);
+
+//		gdispClear(White);
+//		gdispFillCircle(displaySizeX/2 + 50 ,displaySizeY/2 , circleRadius, Green);
+//		gdispFillCircle(displaySizeX/2 + 50 ,displaySizeY/2 , circleRadius - circleLineWidth, White);
+//
+//		// Wait for display to stop writing
+//		xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
+//		ESPL_DrawLayer();
+//
+//		vTaskDelay(500);
+
+
+		vTaskDelayUntil(&xLastWakeTime, tickFramerate);
+	}
 
 }
 
-void exercise3() {
+void dynamicTask()
+{
+	//vTaskDelay(500);
+	TickType_t xLastWakeTime;
+	xLastWakeTime = xTaskGetTickCount();
+	const TickType_t tickFramerate = 500;
+
+	uint16_t circleRadius = 50;
+	uint16_t circleLineWidth = 3;
+
+	while(1)
+	{
+		gdispClear(White);
+		gdispFillCircle(displaySizeX/2 + 50 ,displaySizeY/2 , circleRadius, Green);
+		gdispFillCircle(displaySizeX/2 + 50 ,displaySizeY/2 , circleRadius - circleLineWidth, White);
+
+		// Wait for display to stop writing
+		xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
+
+		ESPL_DrawLayer();
+
+		vTaskDelay(450);
+
+		vTaskDelayUntil(&xLastWakeTime, tickFramerate);
+	}
+}
+
+void changeState() {
 	TickType_t xLastWakeTime;
 	xLastWakeTime = xTaskGetTickCount();
 	const TickType_t tickFramerate = 20;
@@ -74,7 +139,6 @@ void exercise3() {
 		if (checkButtonE()) {
 			//while(!GPIO_ReadInputDataBit(ESPL_Register_Button_E, ESPL_Pin_Button_E))
 			//;
-
 			unsigned char prev_state = state;
 			state = prev_state + 1;
 //			state++;
@@ -104,16 +168,21 @@ void drawTask() {
 	font_t font1; // Load font for ugfx
 	font1 = gdispOpenFont("DejaVuSans24*");
 
-	//Countinhttps://www.arduino.cc/en/tutorial/debounceg Buttons
+	//Calculating Joysticks Position
+	int relativeJoystickPositionX = 0; //related with screen
+	int relativeJoystickPositionY = 0;
+
+	//Counting Buttons
 	uint16_t cntA = 0;
 	uint16_t cntB = 0;
 	uint16_t cntC = 0;
 	uint16_t cntD = 0;
 	uint16_t cntE = 0;
 	uint16_t cntK = 0;
-	//Initial Points and Positions
-	double distanceOfObjects = 50; // rotating Radius aroung the triangle (middle point of screen)
 
+	//Initial Points and Positions
+	double distanceOfObjects = 50; // rotating Radius around the triangle (middle point of screen)
+	point dfdd;
 	double anglePositionCircle = mPI;
 	uint16_t circleRadius = 10;
 	uint16_t circleLineWidth = 3;
@@ -126,11 +195,13 @@ void drawTask() {
 	uint16_t trianglePointB_Y = (float) 1 / 2 * displaySizeY + 15;
 	uint16_t trianglePointC_X = displaySizeX / 2;
 	uint16_t trianglePointC_Y = (float) 1 / 2 * displaySizeY - 15;
+	const point trianglePoint[3] = {{trianglePointA_X, trianglePointA_Y},
+							  {trianglePointB_X, trianglePointB_Y},
+							  {trianglePointC_X, trianglePointC_Y}};
 
 	double anglePositionSquare = 0;
 	uint16_t squareLength = 20;
-	uint16_t squarePositionX = displaySizeX / 2 + distanceOfObjects
-			- squareLength; // Right X Axis, 3rt term is linear translation to calibrate middle point of the square
+	uint16_t squarePositionX = displaySizeX / 2 + distanceOfObjects - squareLength; // Right X Axis, 3rt term is linear translation to calibrate middle point of the square
 	uint16_t squarePositionY = (float) 1 / 2 * displaySizeY - squareLength;
 
 	char staticString[50] = { "HELLO ESPL" }; // Amount of character ?
@@ -143,248 +214,216 @@ void drawTask() {
 	uint16_t dynamicStringTmp = 0;
 
 	while (TRUE) {
-		if (state == 1) // showing exercise 2
-				{
 
-			//		// wait for buffer swap
-			while (xQueueReceive(JoystickQueue, &joystickPosition, 0) == pdTRUE)
-				;
-			gdispClear(White);
+		switch(state)
+		{
+			case 1:
+			// *********************************************** FIRST STATE *******************************************************
+			{
 
-			//EXERCISE 2
-			//2.1 EXERCISE 3 FIGURES ----------------------------------------------------------------------------------------------------------------
-			//Calculating new angle for figures
-			if (anglePositionCircle <= -2 * mPI) {
-				anglePositionCircle = anglePositionCircle + 2 * mPI - mPI / 360;
-			} else {
-				anglePositionCircle = anglePositionCircle + mPI / 360;
+				//		// wait for buffer swap
+				while (xQueueReceive(JoystickQueue, &joystickPosition, 0) == pdTRUE)
+					;
+				gdispClear(White);
+
+				//EXERCISE 2
+				//2.1 EXERCISE 3 FIGURES ----------------------------------------------------------------------------------------------------------------
+				//CALCULATING NEW ANGLE POSITION FOR ROTATING FIGURES
+				if (anglePositionCircle <= -2 * mPI) {
+					anglePositionCircle = anglePositionCircle + 2 * mPI - mPI / 360;
+				} else {
+					anglePositionCircle = anglePositionCircle + mPI / 360;
+				}
+
+				if (anglePositionSquare <= -2 * mPI) {
+					anglePositionSquare = anglePositionSquare + 2 * mPI - mPI / 360;
+				} else {
+					anglePositionSquare = anglePositionSquare + mPI / 360;
+				}
+
+				//CALCULATING NEW POSITION FOR DYNAMIC STRING
+				dynamicStringPositionX = (dynamicStringPositionX + 1)
+						% displaySizeX;
+				//	if(abs((double)displaySizeX-(double)dynamicStringPositionX) < 10)
+				//	{
+				//		dynamicStringTmp = displaySizeX - dynamicStringPositionX; // Calculate the start index which will not be shown on display
+				//	}
+				//	else
+				//	{
+				//		dynamicStringTmp = 0;
+				//	}
+				//	char *stringTmp = dynamicString; CHECK LATER
+				//	stringTmp += dynamicStringTmp;
+				//
+
+				//CALCULATING SCREEN'S MOVEMENT RELATED TO JOYSTICKPOSITION
+				if (((abs(joystickPosition.x - 127) / 2) >= 10)
+						| ((abs(joystickPosition.y - 127) / 2) >= 10)) // Avoid noise
+						{
+					relativeJoystickPositionX = (joystickPosition.x - 127) / 1.5; // relative position for programmer, 2 is the moving speed
+					relativeJoystickPositionY = (joystickPosition.y - 127) / 1;
+				} else {
+					relativeJoystickPositionX = 0;
+					relativeJoystickPositionY = 0;
+				}
+
+				//SHOW A TRIANGLE
+//				gdispDrawLine(trianglePointA_X + relativeJoystickPositionX,
+//						trianglePointA_Y + relativeJoystickPositionY,
+//						trianglePointB_X + relativeJoystickPositionX,
+//						trianglePointB_Y + relativeJoystickPositionY, Blue);
+//				gdispDrawLine(trianglePointB_X + relativeJoystickPositionX,
+//						trianglePointB_Y + relativeJoystickPositionY,
+//						trianglePointC_X + relativeJoystickPositionX,
+//						trianglePointC_Y + relativeJoystickPositionY, Blue);
+//				gdispDrawLine(trianglePointC_X + relativeJoystickPositionX,
+//						trianglePointC_Y + relativeJoystickPositionY,
+//						trianglePointA_X + relativeJoystickPositionX,
+//						trianglePointA_Y + relativeJoystickPositionY, Blue);
+				double dynamicPositionTriangle_X = 0 + relativeJoystickPositionX;
+				double dynamicPositionTriangle_Y = 0 + relativeJoystickPositionY;
+
+				gdispDrawPoly(dynamicPositionTriangle_X ,dynamicPositionTriangle_Y , trianglePoint, 3, Blue);
+
+				//SHOW A ROTATING CIRCLE
+				double dynamicPositionCircleX = displaySizeX / 2 + distanceOfObjects * cos(anglePositionCircle); // relative to centre point of the screen X Axis
+				double dynamicPositionCircleY = displaySizeY / 2 + distanceOfObjects * sin(anglePositionCircle); // relative to centre point of the scree Y Axis
+				gdispFillCircle(dynamicPositionCircleX + relativeJoystickPositionX,dynamicPositionCircleY + relativeJoystickPositionY, circleRadius, Red);
+				gdispFillCircle(dynamicPositionCircleX + relativeJoystickPositionX,dynamicPositionCircleY + relativeJoystickPositionY, circleRadius - circleLineWidth, White);
+
+				//SHOW A ROTATING SQUARE
+				double dynamicPositionSquareX = displaySizeX / 2 - squareLength / 2 + distanceOfObjects * cos(anglePositionSquare); // relative to centre point of the screen X Axis
+				double dynamicPositionSquareY = displaySizeY / 2 - squareLength / 2 + distanceOfObjects * sin(anglePositionSquare); // relative to centre point of the scree Y Axis
+				gdispFillArea(dynamicPositionSquareX + relativeJoystickPositionX, dynamicPositionSquareY + relativeJoystickPositionY, squareLength, squareLength, Green);
+
+				//SHOW TEXT STATIC
+				gdispDrawString(staticStringPositionX + relativeJoystickPositionX, staticStringPositionY + relativeJoystickPositionY, staticString, font1, Black);
+
+				//SHOW TEXT DYNAMIC
+				gdispDrawString(dynamicStringPositionX + relativeJoystickPositionX, dynamicStringPositionY + relativeJoystickPositionY, dynamicString, font1, Black);
+				//	if(dynamicStringTmp > 0)
+				//	{
+				//		gdispDrawString(0, dynamicStringPositionY, *stringTmp, font1, Black); // NOT SURE
+				//		gdispDrawString(staticStringPositionX, staticStringPositionY -10 , staticString, font1, Black);
+				//		//while(1);
+				//	}
+
+				//2.2 BUTTON EXERCISE ---------------------------------------------------------------------------------------------------------------------
+				if (checkButtonA()) {
+					cntA++;
+				}
+				if (checkButtonB()) {
+					cntB++;
+				}
+				if (checkButtonC()) {
+					cntC++;
+				}
+				if (checkButtonD()) {
+					cntD++;
+				}
+				if (checkButtonE()) {
+					cntE++;
+				}
+				if (checkButtonK()) {
+					cntK++;
+					cntA = 0;
+					cntB = 0;
+					cntC = 0;
+					cntD = 0;
+				}
+
+				// Generate string with current joystick values
+				sprintf(str, "A: %d, #: %d |B: %d, #: %d |C %d, #: %d |D: %d, #: %d",
+						GPIO_ReadInputDataBit(ESPL_Register_Button_A,
+								ESPL_Pin_Button_A), cntA,
+						GPIO_ReadInputDataBit(ESPL_Register_Button_B,
+								ESPL_Pin_Button_B), cntB,
+						GPIO_ReadInputDataBit(ESPL_Register_Button_C,
+								ESPL_Pin_Button_C), cntC,
+						GPIO_ReadInputDataBit(ESPL_Register_Button_D,
+								ESPL_Pin_Button_D), cntD);
+				sprintf(str2, "E: %d, #: %d|K: %d, #: %d|X: %d, Y: %d",
+						GPIO_ReadInputDataBit(ESPL_Register_Button_E,
+								ESPL_Pin_Button_E), cntE,
+						GPIO_ReadInputDataBit(ESPL_Register_Button_K,
+								ESPL_Pin_Button_K), cntK, joystickPosition.x,
+						joystickPosition.y);
+				// Print string of joystick values
+				gdispDrawString(0 + relativeJoystickPositionX,
+						0 + relativeJoystickPositionY, str, font1, Black);
+				gdispDrawString(0 + relativeJoystickPositionX,
+						15 + relativeJoystickPositionY, str2, font1, Black);
+
+				//2.3 JOYSTICK -----------------------------------------------------------------------------------------------------------------------
+				// Generate string with current joystick values
+				sprintf(str, "Axis 1: %5d|Axis 2: %5d|VBat: %5d",
+						ADC_GetConversionValue(ESPL_ADC_Joystick_1),
+						ADC_GetConversionValue(ESPL_ADC_Joystick_2),
+						ADC_GetConversionValue(ESPL_ADC_VBat));
+
+				// Print string of joystick values
+				gdispDrawString(0 + relativeJoystickPositionX,
+						30 + relativeJoystickPositionY, str, font1, Black);
+
+				// Wait for display to stop writing
+				xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
+				// swap buffers
+				ESPL_DrawLayer();
+
+				vTaskDelayUntil(&xLastWakeTime, tickFramerate);
+				break;
+			}
+			// ******************************************** END FIRST STATE *******************************************************
+
+		case 2:
+			// ********************************************* SECOND STATE *********************************************************
+			{
+				//gdispClear(White);
+				font_t font1; // Load font for ugfx
+				font1 = gdispOpenFont("DejaVuSans24*");
+
+				char str[100]; // buffer for messages to draw to display
+
+				gdispClear(White);
+				sprintf(str, "A: %d |B: %d |C: %d |D: %d",
+						GPIO_ReadInputDataBit(ESPL_Register_Button_A,
+								ESPL_Pin_Button_A),
+						GPIO_ReadInputDataBit(ESPL_Register_Button_B,
+								ESPL_Pin_Button_B),
+						GPIO_ReadInputDataBit(ESPL_Register_Button_C,
+								ESPL_Pin_Button_C),
+						GPIO_ReadInputDataBit(ESPL_Register_Button_D,
+								ESPL_Pin_Button_D));
+				gdispDrawString(0, 0, str, font1, Black);
+
+				// Wait for display to stop writing
+				xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
+				// swap buffers
+				ESPL_DrawLayer();
+
+				vTaskDelayUntil(&xLastWakeTime, tickFramerate);
+				break;
+			}
+			// *********************************************** END SECOND STATE *******************************************************
+
+		default:
+			// *********************************************** THIRD STATE ************************************************************
+			{
+				gdispClear(White);
+
+				// Wait for display to stop writing
+				xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
+				// swap buffers
+				ESPL_DrawLayer();
+
+				vTaskDelayUntil(&xLastWakeTime, tickFramerate);
+				break;
+
 			}
 
-			if (anglePositionSquare <= -2 * mPI) {
-				anglePositionSquare = anglePositionSquare + 2 * mPI - mPI / 360;
-			} else {
-				anglePositionSquare = anglePositionSquare + mPI / 360;
-			}
-
-			//Calculating new position for the dynamic string
-			dynamicStringPositionX = (dynamicStringPositionX + 1)
-					% displaySizeX;
-			//	if(abs((double)displaySizeX-(double)dynamicStringPositionX) < 10)
-			//	{
-			//		dynamicStringTmp = displaySizeX - dynamicStringPositionX; // Calculate the start index which will not be shown on display
-			//	}
-			//	else
-			//	{
-			//		dynamicStringTmp = 0;
-			//	}
-			//	char *stringTmp = dynamicString; CHECK LATER
-			//	stringTmp += dynamicStringTmp;
-			//
-
-			//CALIBRATING JOYSTICKPOSITION
-			if (((abs(joystickPosition.x - 127) / 2) >= 10)
-					| ((abs(joystickPosition.y - 127) / 2) >= 10)) // Avoid noise
-					{
-				relativeJoystickPositionX = (joystickPosition.x - 127) / 8; // relative position for programmer, 2 is the moving speed
-				relativeJoystickPositionY = (joystickPosition.y - 127) / 2;
-			} else {
-				relativeJoystickPositionX = 0;
-				relativeJoystickPositionY = 0;
-			}
-
-			//SHOW A TRIANGLE
-			gdispDrawLine(trianglePointA_X + relativeJoystickPositionX,
-					trianglePointA_Y + relativeJoystickPositionY,
-					trianglePointB_X + relativeJoystickPositionX,
-					trianglePointB_Y + relativeJoystickPositionY, Blue);
-			gdispDrawLine(trianglePointB_X + relativeJoystickPositionX,
-					trianglePointB_Y + relativeJoystickPositionY,
-					trianglePointC_X + relativeJoystickPositionX,
-					trianglePointC_Y + relativeJoystickPositionY, Blue);
-			gdispDrawLine(trianglePointC_X + relativeJoystickPositionX,
-					trianglePointC_Y + relativeJoystickPositionY,
-					trianglePointA_X + relativeJoystickPositionX,
-					trianglePointA_Y + relativeJoystickPositionY, Blue);
-
-			//DRAW MIDDLE POINT
-			gdispDrawPixel(160, 120, Red);
-
-			//SHOW A ROTATING CIRCLE
-			double dynamicPositionCircleX = displaySizeX / 2
-					+ distanceOfObjects * cos(anglePositionCircle); // relative to centre point of the screen X Axis
-			double dynamicPositionCircleY = displaySizeY / 2
-					+ distanceOfObjects * sin(anglePositionCircle); // relative to centre point of the scree Y Axis
-			gdispFillCircle(dynamicPositionCircleX + relativeJoystickPositionX,
-					dynamicPositionCircleY + relativeJoystickPositionY,
-					circleRadius, Red);
-			gdispFillCircle(dynamicPositionCircleX + relativeJoystickPositionX,
-					dynamicPositionCircleY + relativeJoystickPositionY,
-					circleRadius - circleLineWidth, White);
-
-			//SHOW A ROTATING SQUARE
-			double dynamicPositionSquareX = displaySizeX / 2 - squareLength / 2
-					+ distanceOfObjects * cos(anglePositionSquare); // relative to centre point of the screen X Axis
-			double dynamicPositionSquareY = displaySizeY / 2 - squareLength / 2
-					+ distanceOfObjects * sin(anglePositionSquare);
-			gdispFillArea(dynamicPositionSquareX + relativeJoystickPositionX,
-					dynamicPositionSquareY + relativeJoystickPositionY,
-					squareLength, squareLength, Green);
-
-			//SHOW TEXT STATIC
-			gdispDrawString(staticStringPositionX + relativeJoystickPositionX,
-					staticStringPositionY + relativeJoystickPositionY,
-					staticString, font1, Black);
-
-			//SHOW TEXT DYNAMIC
-			gdispDrawString(dynamicStringPositionX + relativeJoystickPositionX,
-					dynamicStringPositionY + relativeJoystickPositionY,
-					dynamicString, font1, Black);
-			//	if(dynamicStringTmp > 0)
-			//	{
-			//		gdispDrawString(0, dynamicStringPositionY, *stringTmp, font1, Black); // NOT SURE
-			//		gdispDrawString(staticStringPositionX, staticStringPositionY -10 , staticString, font1, Black);
-			//		//while(1);
-			//	}
-
-			//2.2 BUTTON EXERCISE ---------------------------------------------------------------------------------------------------------------------
-			if (checkButtonA()) {
-				cntA++;
-			}
-			if (checkButtonB()) {
-				cntB++;
-			}
-			if (checkButtonC()) {
-				cntC++;
-			}
-			if (checkButtonD()) {
-				cntD++;
-			}
-			if (checkButtonE()) {
-				cntE++;
-			}
-			if (checkButtonK()) {
-				cntK++;
-				cntA = 0;
-				cntB = 0;
-				cntC = 0;
-				cntD = 0;
-			}
-
-			// Generate string with current joystick values
-			sprintf(str,
-					"A: %d, #: %d |B: %d, #: %d |C %d, #: %d |D: %d, #: %d",
-					GPIO_ReadInputDataBit(ESPL_Register_Button_A,
-							ESPL_Pin_Button_A), cntA,
-					GPIO_ReadInputDataBit(ESPL_Register_Button_B,
-							ESPL_Pin_Button_B), cntB,
-					GPIO_ReadInputDataBit(ESPL_Register_Button_C,
-							ESPL_Pin_Button_C), cntC,
-					GPIO_ReadInputDataBit(ESPL_Register_Button_D,
-							ESPL_Pin_Button_D), cntD);
-			sprintf(str2, "E: %d, #: %d|K: %d, #: %d|X: %d, Y: %d",
-					GPIO_ReadInputDataBit(ESPL_Register_Button_E,
-							ESPL_Pin_Button_E), cntE,
-					GPIO_ReadInputDataBit(ESPL_Register_Button_K,
-							ESPL_Pin_Button_K), cntK, joystickPosition.x,
-					joystickPosition.y);
-			// Print string of joystick values
-			gdispDrawString(0 + relativeJoystickPositionX,
-					0 + relativeJoystickPositionY, str, font1, Black);
-			gdispDrawString(0 + relativeJoystickPositionX,
-					15 + relativeJoystickPositionY, str2, font1, Black);
-
-			//2.3 JOYSTICK -----------------------------------------------------------------------------------------------------------------------
-			// Generate string with current joystick values
-			sprintf(str, "Axis 1: %5d|Axis 2: %5d|VBat: %5d",
-					ADC_GetConversionValue(ESPL_ADC_Joystick_1),
-					ADC_GetConversionValue(ESPL_ADC_Joystick_2),
-					ADC_GetConversionValue(ESPL_ADC_VBat));
-
-			// Print string of joystick values
-			gdispDrawString(0 + relativeJoystickPositionX,
-					30 + relativeJoystickPositionY, str, font1, Black);
-			//
-			//		// Clear background
-			//		gdispClear(White);
-			//		// Draw rectangle "cave" for circle
-			//		// By default, the circle should be in the center of the display.
-			//		// Also, the circle can only move by 127px in both directions (position is limited to uint8_t)
-			//		gdispFillArea(caveX-10, caveY-10, caveSize + 20, caveSize + 20, Red);
-			//		// color inner white
-			//		gdispFillArea(caveX, caveY, caveSize, caveSize, White);
-			//
-			//		// Generate string with current joystick values
-			//		sprintf( str, "Axis 1: %5d|Axis 2: %5d|VBat: %5d",
-			//				 ADC_GetConversionValue(ESPL_ADC_Joystick_1),
-			//				 ADC_GetConversionValue(ESPL_ADC_Joystick_2),
-			//				 ADC_GetConversionValue(ESPL_ADC_VBat) );
-			//		// Print string of joystick values
-			//		gdispDrawString(0, 0, str, font1, Black);
-			//
-			//		// Generate string with current joystick values
-			//		sprintf( str, "A: %d|B: %d|C %d|D: %d|E: %d|K: %d",
-			//				 GPIO_ReadInputDataBit(ESPL_Register_Button_A, ESPL_Pin_Button_A),
-			//				 GPIO_ReadInputDataBit(ESPL_Register_Button_B, ESPL_Pin_Button_B),
-			//				 GPIO_ReadInputDataBit(ESPL_Register_Button_C, ESPL_Pin_Button_C),
-			//				 GPIO_ReadInputDataBit(ESPL_Register_Button_D, ESPL_Pin_Button_D),
-			//				 GPIO_ReadInputDataBit(ESPL_Register_Button_E, ESPL_Pin_Button_E),
-			//				 GPIO_ReadInputDataBit(ESPL_Register_Button_K, ESPL_Pin_Button_K) );
-			//		// Print string of joystick values
-			//		gdispDrawString(0, 11, str, font1, Black);
-			//
-			//		// Draw Circle in center of square, add joystick movement
-			//		circlePositionX = caveX + joystickPosition.x/2;
-			//		circlePositionY = caveY + joystickPosition.y/2;
-			//		gdispFillCircle(circlePositionX, circlePositionY, 10, Green);
-
-			// Wait for display to stop writing
-			xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
-			// swap buffers
-			ESPL_DrawLayer();
-
-			vTaskDelayUntil(&xLastWakeTime, tickFramerate); //NEED TO ASK TUTOR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-		} else if (state == 2) {
-
-			//gdispClear(White);
-			font_t font1; // Load font for ugfx
-			font1 = gdispOpenFont("DejaVuSans24*");
-
-			char str[100]; // buffer for messages to draw to display
-
-			gdispClear(White);
-			sprintf(str, "A: %d |B: %d |C: %d |D: %d",
-					GPIO_ReadInputDataBit(ESPL_Register_Button_A,
-							ESPL_Pin_Button_A),
-					GPIO_ReadInputDataBit(ESPL_Register_Button_B,
-							ESPL_Pin_Button_B),
-					GPIO_ReadInputDataBit(ESPL_Register_Button_C,
-							ESPL_Pin_Button_C),
-					GPIO_ReadInputDataBit(ESPL_Register_Button_D,
-							ESPL_Pin_Button_D));
-			gdispDrawString(0, 0, str, font1, Black);
-
-			// Wait for display to stop writing
-			xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
-			// swap buffers
-			ESPL_DrawLayer();
-
-			vTaskDelayUntil(&xLastWakeTime, tickFramerate);
-
-		} else {
-
-			gdispClear(White);
-
-			// Wait for display to stop writing
-			xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
-			// swap buffers
-			ESPL_DrawLayer();
-
-			vTaskDelayUntil(&xLastWakeTime, tickFramerate);
-
+			// *********************************************** END THIRD STATE *********************************************************
 		}
 	}
-
 }
 
 /**
@@ -484,7 +523,7 @@ void vApplicationMallocFailedHook() {
 	};
 }
 
-int checkButtonA() {
+unsigned int short checkButtonA() {
 	unsigned char readingA = GPIO_ReadInputDataBit(ESPL_Register_Button_A,
 			ESPL_Pin_Button_A);
 	if (readingA != tmpA) {
@@ -495,15 +534,15 @@ int checkButtonA() {
 			buttonStateA = readingA;
 
 			if (buttonStateA == 0) {
-				return 1;
+				return (uint8_t)1;
 			}
 		}
 	}
 	tmpA = readingA;
-	return 0;
+	return (uint8_t)0;
 }
 
-int checkButtonB() {
+unsigned int short checkButtonB() {
 
 	unsigned char readingB = GPIO_ReadInputDataBit(ESPL_Register_Button_B,
 			ESPL_Pin_Button_B);
@@ -523,7 +562,7 @@ int checkButtonB() {
 	return 0;
 }
 
-int checkButtonC() {
+unsigned int short checkButtonC() {
 	unsigned char readingC = GPIO_ReadInputDataBit(ESPL_Register_Button_C,
 			ESPL_Pin_Button_C);
 	if (readingC != tmpC) {
@@ -542,7 +581,7 @@ int checkButtonC() {
 	return 0;
 }
 
-int checkButtonD() {
+unsigned int short checkButtonD() {
 	unsigned char readingD = GPIO_ReadInputDataBit(ESPL_Register_Button_D,
 			ESPL_Pin_Button_D);
 	if (readingD != tmpD) {
@@ -561,7 +600,7 @@ int checkButtonD() {
 	return 0;
 }
 
-int checkButtonK() {
+unsigned int short checkButtonK() {
 	unsigned char readingK = GPIO_ReadInputDataBit(ESPL_Register_Button_K,
 			ESPL_Pin_Button_K);
 	if (readingK != tmpK) {
@@ -579,7 +618,7 @@ int checkButtonK() {
 	return 0;
 }
 
-int checkButtonE() {
+unsigned int short checkButtonE() {
 	unsigned char readingE = GPIO_ReadInputDataBit(ESPL_Register_Button_E,
 			ESPL_Pin_Button_E);
 	if (readingE != tmpE) {
@@ -596,4 +635,15 @@ int checkButtonE() {
 	tmpE = readingE;
 	return 0;
 }
+
+//QUESTIONS
+/*
+ * 1) unsigned int short vs unsigned char in checkButton
+ *
+ *
+ *
+ *
+ *
+ */
+
 
