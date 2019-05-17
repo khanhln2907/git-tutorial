@@ -20,6 +20,17 @@ static const uint8_t startByte = 0xAA, stopByte = 0x55;
 
 static const uint16_t displaySizeX = 320, displaySizeY = 240;
 
+//Static Stack
+#define STACK_SIZE 100
+/* Structure that will hold the TCB of the task being created. */
+StaticTask_t xTaskBuffer;
+
+/* Buffer that the task being created will use as its stack.  Note this is
+an array of StackType_t variables.  The size of StackType_t is dependent on
+the RTOS port. */
+StackType_t xStack[STACK_SIZE];
+
+
 //State Machine
 unsigned int state = 1;
 
@@ -57,8 +68,11 @@ int main() {
 	//xTaskCreate(drawTask, "drawTask", 1000, NULL, 5, NULL);
 	//xTaskCreate(checkJoystick, "checkJoystick", 1000, NULL, 3, NULL);
 	//xTaskCreate(changeState, "changeState", 1000, NULL, 4, NULL);
-	xTaskCreate(staticTask, "staticTask", 1000, NULL, 4, NULL);
-	xTaskCreate(dynamicTask, "dynamicTask", 1000, NULL, 3, NULL);
+	//TaskHandle_t xHandle = NULL;
+	xTaskCreate(dynamicTask, "dynamicTask", 1000, NULL, 7, NULL);
+	xTaskCreateStatic(staticTask, "staticTask", STACK_SIZE, NULL, 6, xStack, &xTaskBuffer);
+	//xTaskCreate(staticTask, "staticTask", STACK_SIZE, NULL, 5,NULL);
+
 
 	// Start FreeRTOS Scheduler
 	vTaskStartScheduler();
@@ -68,7 +82,7 @@ void staticTask()
 {
 	TickType_t xLastWakeTime;
 	xLastWakeTime = xTaskGetTickCount();
-	const TickType_t tickFramerate = 500;
+	const TickType_t tickFramerate = 1000;
 
 	uint16_t circleRadius = 50;
 	uint16_t circleLineWidth = 3;
@@ -76,26 +90,14 @@ void staticTask()
 	while(1)
 	{
 		gdispClear(White);
-		gdispFillCircle(displaySizeX/2 -50 ,displaySizeY/2 , circleRadius, Red);
-		gdispFillCircle(displaySizeX/2 -50 ,displaySizeY/2 , circleRadius - circleLineWidth, White);
+		gdispFillCircle(displaySizeX/2 - 50  ,displaySizeY/2 , circleRadius, Blue);
 
 		// Wait for display to stop writing
 		xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
 		// swap buffers
 		ESPL_DrawLayer();
 
-		vTaskDelay(450);
-
-//		gdispClear(White);
-//		gdispFillCircle(displaySizeX/2 + 50 ,displaySizeY/2 , circleRadius, Green);
-//		gdispFillCircle(displaySizeX/2 + 50 ,displaySizeY/2 , circleRadius - circleLineWidth, White);
-//
-//		// Wait for display to stop writing
-//		xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
-//		ESPL_DrawLayer();
-//
-//		vTaskDelay(500);
-
+		while(1);
 
 		vTaskDelayUntil(&xLastWakeTime, tickFramerate);
 	}
@@ -107,7 +109,7 @@ void dynamicTask()
 	//vTaskDelay(500);
 	TickType_t xLastWakeTime;
 	xLastWakeTime = xTaskGetTickCount();
-	const TickType_t tickFramerate = 500;
+	const TickType_t tickFramerate = 1000;
 
 	uint16_t circleRadius = 50;
 	uint16_t circleLineWidth = 3;
@@ -115,15 +117,14 @@ void dynamicTask()
 	while(1)
 	{
 		gdispClear(White);
-		gdispFillCircle(displaySizeX/2 + 50 ,displaySizeY/2 , circleRadius, Green);
-		gdispFillCircle(displaySizeX/2 + 50 ,displaySizeY/2 , circleRadius - circleLineWidth, White);
+		gdispFillCircle(displaySizeX/2 + 50 ,displaySizeY/2 , circleRadius, Red);
 
 		// Wait for display to stop writing
 		xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
-
+		// swap buffers
 		ESPL_DrawLayer();
 
-		vTaskDelay(450);
+		while(1);
 
 		vTaskDelayUntil(&xLastWakeTime, tickFramerate);
 	}
@@ -182,7 +183,6 @@ void drawTask() {
 
 	//Initial Points and Positions
 	double distanceOfObjects = 50; // rotating Radius around the triangle (middle point of screen)
-	point dfdd;
 	double anglePositionCircle = mPI;
 	uint16_t circleRadius = 10;
 	uint16_t circleLineWidth = 3;
@@ -229,16 +229,17 @@ void drawTask() {
 				//EXERCISE 2
 				//2.1 EXERCISE 3 FIGURES ----------------------------------------------------------------------------------------------------------------
 				//CALCULATING NEW ANGLE POSITION FOR ROTATING FIGURES
+				double rotatingSpeed = 22.5;
 				if (anglePositionCircle <= -2 * mPI) {
-					anglePositionCircle = anglePositionCircle + 2 * mPI - mPI / 360;
+					anglePositionCircle = anglePositionCircle + 2 * mPI - mPI / rotatingSpeed;
 				} else {
-					anglePositionCircle = anglePositionCircle + mPI / 360;
+					anglePositionCircle = anglePositionCircle + mPI / rotatingSpeed;
 				}
 
 				if (anglePositionSquare <= -2 * mPI) {
-					anglePositionSquare = anglePositionSquare + 2 * mPI - mPI / 360;
+					anglePositionSquare = anglePositionSquare + 2 * mPI - mPI / rotatingSpeed;
 				} else {
-					anglePositionSquare = anglePositionSquare + mPI / 360;
+					anglePositionSquare = anglePositionSquare + mPI / rotatingSpeed;
 				}
 
 				//CALCULATING NEW POSITION FOR DYNAMIC STRING
@@ -639,6 +640,64 @@ unsigned int short checkButtonE() {
 //QUESTIONS
 /*
  * 1) unsigned int short vs unsigned char in checkButton
+ *2) Tick frequency ?
+ *
+ *
+ *
+ *---------------------
+ *--------------------- NOW WORKING PROPERLY ALWAYS BLUE FIRST
+ *void staticTask()
+{
+	TickType_t xLastWakeTime;
+	xLastWakeTime = xTaskGetTickCount();
+	const TickType_t tickFramerate = 1000;
+
+	uint16_t circleRadius = 50;
+	uint16_t circleLineWidth = 3;
+
+	while(1)
+	{
+		gdispClear(White);
+		gdispFillCircle(displaySizeX/2 - 50  ,displaySizeY/2 , circleRadius, Blue);
+
+		// Wait for display to stop writing
+		xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
+		// swap buffers
+		ESPL_DrawLayer();
+
+		while(1);
+
+		vTaskDelayUntil(&xLastWakeTime, tickFramerate);
+	}
+
+}
+
+void dynamicTask()
+{
+	vTaskDelay(500);
+	TickType_t xLastWakeTime;
+	xLastWakeTime = xTaskGetTickCount();
+	const TickType_t tickFramerate = 1000;
+
+	uint16_t circleRadius = 50;
+	uint16_t circleLineWidth = 3;
+
+	while(1)
+	{
+		gdispClear(White);
+		gdispFillCircle(displaySizeX/2 + 50 ,displaySizeY/2 , circleRadius, Red);
+
+		// Wait for display to stop writing
+		xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
+		// swap buffers
+		ESPL_DrawLayer();
+
+		while(1);
+
+		vTaskDelayUntil(&xLastWakeTime, tickFramerate);
+	}
+}
+ *
  *
  *
  *
@@ -646,4 +705,57 @@ unsigned int short checkButtonE() {
  *
  */
 
+//FOR STATIC AND I DONT KNOW WHERE TO PUT IT IN
+/* configSUPPORT_STATIC_ALLOCATION is set to 1, so the application must provide an
+implementation of vApplicationGetIdleTaskMemory() to provide the memory that is
+used by the Idle task. */
+void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer,
+                                    StackType_t **ppxIdleTaskStackBuffer,
+                                    uint32_t *pulIdleTaskStackSize )
+{
+/* If the buffers to be provided to the Idle task are declared inside this
+function then they must be declared static - otherwise they will be allocated on
+the stack and so not exists after this function exits. */
+static StaticTask_t xIdleTaskTCB;
+static StackType_t uxIdleTaskStack[ configMINIMAL_STACK_SIZE ];
+
+    /* Pass out a pointer to the StaticTask_t structure in which the Idle task's
+    state will be stored. */
+    *ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
+
+    /* Pass out the array that will be used as the Idle task's stack. */
+    *ppxIdleTaskStackBuffer = uxIdleTaskStack;
+
+    /* Pass out the size of the array pointed to by *ppxIdleTaskStackBuffer.
+    Note that, as the array is necessarily of type StackType_t,
+    configMINIMAL_STACK_SIZE is specified in words, not bytes. */
+    *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
+}
+/*-----------------------------------------------------------*/
+
+/* configSUPPORT_STATIC_ALLOCATION and configUSE_TIMERS are both set to 1, so the
+application must provide an implementation of vApplicationGetTimerTaskMemory()
+to provide the memory that is used by the Timer service task. */
+void vApplicationGetTimerTaskMemory( StaticTask_t **ppxTimerTaskTCBBuffer,
+                                     StackType_t **ppxTimerTaskStackBuffer,
+                                     uint32_t *pulTimerTaskStackSize )
+{
+/* If the buffers to be provided to the Timer task are declared inside this
+function then they must be declared static - otherwise they will be allocated on
+the stack and so not exists after this function exits. */
+static StaticTask_t xTimerTaskTCB;
+static StackType_t uxTimerTaskStack[ configTIMER_TASK_STACK_DEPTH ];
+
+    /* Pass out a pointer to the StaticTask_t structure in which the Timer
+    task's state will be stored. */
+    *ppxTimerTaskTCBBuffer = &xTimerTaskTCB;
+
+    /* Pass out the array that will be used as the Timer task's stack. */
+    *ppxTimerTaskStackBuffer = uxTimerTaskStack;
+
+    /* Pass out the size of the array pointed to by *ppxTimerTaskStackBuffer.
+    Note that, as the array is necessarily of type StackType_t,
+    configTIMER_TASK_STACK_DEPTH is specified in words, not bytes. */
+    *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
+}
 
