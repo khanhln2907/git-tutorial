@@ -14,30 +14,34 @@
 #define mPI acos(-1.0)
 #define debounceTick 50
 #define defaultButton 1
+#define EXERCISE2 1
+#define EXERCISE3 2
 
 // start and stop bytes for the UART protocol
 static const uint8_t startByte = 0xAA, stopByte = 0x55;
 
 static const uint16_t displaySizeX = 320, displaySizeY = 240;
 
+//Dynamic Stack
+#define dynamicStackSize 100
+
 //Static Stack
-#define STACK_SIZE 100
+#define staticStackSize 100
 /* Structure that will hold the TCB of the task being created. */
 StaticTask_t xTaskBuffer;
 
 /* Buffer that the task being created will use as its stack.  Note this is
 an array of StackType_t variables.  The size of StackType_t is dependent on
 the RTOS port. */
-StackType_t xStack[STACK_SIZE];
-
+StackType_t xStack[staticStackSize];
 
 //State Machine
 unsigned int state = 1;
 
 //relative Position of Joystick
-unsigned char tmpA = 1;
+unsigned char tmpA = 1, tmpA3 = 0;
 unsigned char buttonStateA = 0;
-unsigned char tmpB = 1;
+unsigned char tmpB = 1, tmpB3 = 0;
 unsigned char buttonStateB = 0;
 unsigned char tmpC = 1;
 unsigned char buttonStateC = 0;
@@ -55,6 +59,13 @@ SemaphoreHandle_t ESPL_DisplayReady;
 // Stores lines to be drawn
 QueueHandle_t JoystickQueue;
 
+//Task parameter
+unsigned char redCircleDefault = 1;
+unsigned char blueCircleDefault = 1;
+
+static TaskHandle_t xTaskA = NULL;
+static TaskHandle_t xTaskB = NULL;
+
 int main() {
 	// Initialize Board functions and graphics
 	ESPL_SystemInit();
@@ -65,20 +76,22 @@ int main() {
 	JoystickQueue = xQueueCreate(100, 2 * sizeof(char));
 
 	// Initializes Tasks with their respective priority
-	//xTaskCreate(drawTask, "drawTask", 1000, NULL, 5, NULL);
-	//xTaskCreate(checkJoystick, "checkJoystick", 1000, NULL, 3, NULL);
-	//xTaskCreate(changeState, "changeState", 1000, NULL, 4, NULL);
+	xTaskCreate(drawTask, "drawTask", 1000, NULL, 4, NULL);
+	xTaskCreate(checkJoystick, "checkJoystick", 1000, NULL, 3, NULL);
+	xTaskCreate(changeState, "changeState", 1000, NULL, 4, NULL);
 	//TaskHandle_t xHandle = NULL;
-	xTaskCreate(dynamicTask, "dynamicTask", 1000, NULL, 7, NULL);
-	xTaskCreateStatic(staticTask, "staticTask", STACK_SIZE, NULL, 6, xStack, &xTaskBuffer);
-	//xTaskCreate(staticTask, "staticTask", STACK_SIZE, NULL, 5,NULL);
-
+	//xTaskCreate(dynamicTask, "dynamicTask", dynamicStackSize, &blueCircleDefault, 3, NULL);
+	//xTaskCreate(draw2Circle, "draw2Circle", 1000, NULL, 5, NULL);
+	//xTaskCreateStatic(staticTask, "staticTask", staticStackSize, &redCircleDefault, 2, xStack, &xTaskBuffer);
+	xTaskCreate(taskTriggerA, "taskTriggerA", 1000, NULL, 5, &xTaskA);
+	xTaskCreate(taskTriggerB, "taskTriggerB", 1000, NULL, 5, &xTaskB);
+	xTaskCreate(displayScreen, "displayScreen", 1000, NULL, 6, NULL);
 
 	// Start FreeRTOS Scheduler
 	vTaskStartScheduler();
 }
 
-void staticTask()
+void staticTask(unsigned char * p1)
 {
 	TickType_t xLastWakeTime;
 	xLastWakeTime = xTaskGetTickCount();
@@ -89,42 +102,97 @@ void staticTask()
 
 	while(1)
 	{
-		gdispClear(White);
-		gdispFillCircle(displaySizeX/2 - 50  ,displaySizeY/2 , circleRadius, Blue);
-
-		// Wait for display to stop writing
-		xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
-		// swap buffers
-		ESPL_DrawLayer();
-
-		while(1);
-
+		*p1 = !(*p1); // Change State of the Circle
 		vTaskDelayUntil(&xLastWakeTime, tickFramerate);
 	}
 
 }
 
-void dynamicTask()
+void dynamicTask(unsigned char * p2)
 {
-	//vTaskDelay(500);
 	TickType_t xLastWakeTime;
 	xLastWakeTime = xTaskGetTickCount();
-	const TickType_t tickFramerate = 1000;
+	const TickType_t tickFramerate = 500;
 
 	uint16_t circleRadius = 50;
 	uint16_t circleLineWidth = 3;
 
 	while(1)
 	{
-		gdispClear(White);
-		gdispFillCircle(displaySizeX/2 + 50 ,displaySizeY/2 , circleRadius, Red);
+		*p2 = !(*p2); // Change State of the Circle
+		vTaskDelayUntil(&xLastWakeTime, tickFramerate);
+	}
+}
 
+void taskTriggerA ()
+{
+	font_t font1; // Load font for ugfx
+	font1 = gdispOpenFont("DejaVuSans24*");
+
+	char str[100]; // buffer for messages to draw to display
+
+	while(1)
+	{
+		ulTaskNotifyTake( pdTRUE, portMAX_DELAY );
+		sprintf(str, "BUTTON A PRESSED. COUNTING: %d", tmpA3);
+		gdispDrawString(0, 60, str, font1, Black);
+	}
+}
+
+void taskTriggerB ()
+{
+	//gdispClear(White);
+	font_t font1; // Load font for ugfx
+	font1 = gdispOpenFont("DejaVuSans24*");
+
+	char str[100]; // buffer for messages to draw to display
+
+	while(1)
+	{
+		ulTaskNotifyTake( pdTRUE, portMAX_DELAY );
+		sprintf(str, "BUTTON B PRESSED. COUNTING: %d", tmpB3);
+		gdispDrawString(0, 70, str, font1, Black);
+	}
+}
+
+void draw2Circle()
+{
+	TickType_t xLastWakeTime;
+	xLastWakeTime = xTaskGetTickCount();
+	const TickType_t tickFramerate = 20;
+	uint16_t circleRadius = 50;
+
+	while(1)
+	{
+		gdispClear(White);
+		if(redCircleDefault == 1)
+		{
+			gdispFillCircle(displaySizeX/2 - 80  ,displaySizeY/2 , circleRadius, Red);
+		}
+		if(blueCircleDefault == 1)
+		{
+			gdispFillCircle(displaySizeX/2 + 80  ,displaySizeY/2 , circleRadius, Blue);
+		}
+
+		vTaskDelayUntil(&xLastWakeTime, tickFramerate);
+	}
+}
+void displayScreen()
+{
+	TickType_t xLastWakeTime;
+	xLastWakeTime = xTaskGetTickCount();
+	const TickType_t tickFramerate = 20;
+
+	font_t font1; // Load font for ugfx
+	font1 = gdispOpenFont("DejaVuSans24*");
+	gdispClear(White);
+	while(1)
+	{
+		ESPL_DrawLayer();
+		gdispClear(White);
 		// Wait for display to stop writing
 		xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
 		// swap buffers
-		ESPL_DrawLayer();
-
-		while(1);
 
 		vTaskDelayUntil(&xLastWakeTime, tickFramerate);
 	}
@@ -147,10 +215,8 @@ void changeState() {
 			if (state > 3) {
 				state = 1;
 			}
-
 		}
-
-		vTaskDelayUntil(&xLastWakeTime, tickFramerate); //NEED TO ASK TUTOR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+		vTaskDelayUntil(&xLastWakeTime, tickFramerate);
 	}
 }
 
@@ -213,11 +279,11 @@ void drawTask() {
 	uint16_t dynamicStringPositionY = displaySizeY - 30;
 	uint16_t dynamicStringTmp = 0;
 
-	while (TRUE) {
+	while (1) {
 
 		switch(state)
 		{
-			case 1:
+			case EXERCISE2:
 			// *********************************************** FIRST STATE *******************************************************
 			{
 
@@ -226,10 +292,22 @@ void drawTask() {
 					;
 				gdispClear(White);
 
+
+				if(checkButtonA())
+				{
+					tmpA3++;
+					xTaskNotifyGive(xTaskA);
+				}
+				if(checkButtonB())
+				{
+					tmpB3++;
+					xTaskNotifyGive(xTaskB);
+				}
+
 				//EXERCISE 2
 				//2.1 EXERCISE 3 FIGURES ----------------------------------------------------------------------------------------------------------------
 				//CALCULATING NEW ANGLE POSITION FOR ROTATING FIGURES
-				double rotatingSpeed = 22.5;
+				double rotatingSpeed = 360;
 				if (anglePositionCircle <= -2 * mPI) {
 					anglePositionCircle = anglePositionCircle + 2 * mPI - mPI / rotatingSpeed;
 				} else {
@@ -243,8 +321,7 @@ void drawTask() {
 				}
 
 				//CALCULATING NEW POSITION FOR DYNAMIC STRING
-				dynamicStringPositionX = (dynamicStringPositionX + 1)
-						% displaySizeX;
+				dynamicStringPositionX = (dynamicStringPositionX + 1) % displaySizeX;
 				//	if(abs((double)displaySizeX-(double)dynamicStringPositionX) < 10)
 				//	{
 				//		dynamicStringTmp = displaySizeX - dynamicStringPositionX; // Calculate the start index which will not be shown on display
@@ -366,45 +443,86 @@ void drawTask() {
 				gdispDrawString(0 + relativeJoystickPositionX,
 						30 + relativeJoystickPositionY, str, font1, Black);
 
-				// Wait for display to stop writing
-				xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
-				// swap buffers
-				ESPL_DrawLayer();
+//				// Wait for display to stop writing
+//				xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
+//				// swap buffers
+//				ESPL_DrawLayer();
+
+
 
 				vTaskDelayUntil(&xLastWakeTime, tickFramerate);
 				break;
 			}
 			// ******************************************** END FIRST STATE *******************************************************
 
-		case 2:
+		case EXERCISE3 :
 			// ********************************************* SECOND STATE *********************************************************
-			{
-				//gdispClear(White);
-				font_t font1; // Load font for ugfx
-				font1 = gdispOpenFont("DejaVuSans24*");
+		{
+					if(checkButtonA())
+					{
+						tmpA3++;
+						xTaskNotifyGive(xTaskA);
+					}
+					if(checkButtonB())
+					{
+						tmpB3++;
+						xTaskNotifyGive(xTaskB);
+					}
 
-				char str[100]; // buffer for messages to draw to display
 
-				gdispClear(White);
-				sprintf(str, "A: %d |B: %d |C: %d |D: %d",
-						GPIO_ReadInputDataBit(ESPL_Register_Button_A,
-								ESPL_Pin_Button_A),
-						GPIO_ReadInputDataBit(ESPL_Register_Button_B,
-								ESPL_Pin_Button_B),
-						GPIO_ReadInputDataBit(ESPL_Register_Button_C,
-								ESPL_Pin_Button_C),
-						GPIO_ReadInputDataBit(ESPL_Register_Button_D,
-								ESPL_Pin_Button_D));
-				gdispDrawString(0, 0, str, font1, Black);
+//				if (checkButtonA()) {
+//								cntA++;
+//							}
+//							if (checkButtonB()) {
+//								cntB++;
+//							}
+//							if (checkButtonC()) {
+//								cntC++;
+//							}
+//							if (checkButtonD()) {
+//								cntD++;
+//							}
+//							if (checkButtonE()) {
+//								cntE++;
+//							}
+//							if (checkButtonK()) {
+//								cntK++;
+//								cntA = 0;
+//								cntB = 0;
+//								cntC = 0;
+//								cntD = 0;
+//						}
+//								sprintf(str, "A: %d, #: %d |B: %d, #: %d |C %d, #: %d |D: %d, #: %d",
+//										GPIO_ReadInputDataBit(ESPL_Register_Button_A,
+//												ESPL_Pin_Button_A), cntA,
+//										GPIO_ReadInputDataBit(ESPL_Register_Button_B,
+//												ESPL_Pin_Button_B), cntB,
+//										GPIO_ReadInputDataBit(ESPL_Register_Button_C,
+//												ESPL_Pin_Button_C), cntC,
+//										GPIO_ReadInputDataBit(ESPL_Register_Button_D,
+//												ESPL_Pin_Button_D), cntD);
+//								sprintf(str2, "E: %d, #: %d|K: %d, #: %d|X: %d, Y: %d",
+//										GPIO_ReadInputDataBit(ESPL_Register_Button_E,
+//												ESPL_Pin_Button_E), cntE,
+//										GPIO_ReadInputDataBit(ESPL_Register_Button_K,
+//												ESPL_Pin_Button_K), cntK, joystickPosition.x,
+//										joystickPosition.y);
+//								// Print string of joystick values
+//								gdispDrawString(0 + relativeJoystickPositionX,
+//										0 + relativeJoystickPositionY, str, font1, Black);
+//								gdispDrawString(0 + relativeJoystickPositionX,
+//										15 + relativeJoystickPositionY, str2, font1, Black);
 
-				// Wait for display to stop writing
-				xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
-				// swap buffers
-				ESPL_DrawLayer();
+//					// Wait for display to stop writing
+//					xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
+//					// swap buffers
+//					ESPL_DrawLayer();
 
-				vTaskDelayUntil(&xLastWakeTime, tickFramerate);
+					vTaskDelayUntil(&xLastWakeTime, tickFramerate);
+
 				break;
-			}
+		}
+
 			// *********************************************** END SECOND STATE *******************************************************
 
 		default:
