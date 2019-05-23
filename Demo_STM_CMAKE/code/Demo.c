@@ -11,6 +11,8 @@
 #include "includes.h"
 #include <math.h>
 #include <string.h>
+#include "timers.h"
+
 #define mPI acos(-1.0)
 #define debounceTick 50
 #define defaultButton 1
@@ -64,14 +66,105 @@ unsigned char redCircleDefault = 1;
 unsigned char blueCircleDefault = 1;
 
 static TaskHandle_t xTaskA = NULL;
-static TaskHandle_t xTaskB = NULL;
+//static TaskHandle_t xTaskB = NULL;
+//static SemaphoreHandle_t xTaskB = NULL;
+SemaphoreHandle_t xSemaphore;
+BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+//Timer
+//const char pcTimerName = "myTimer" ;
+//const TickType_txTimerPeriod = 1000;
+//const UBaseType_tuxAutoReload = pdTrue;
+//void * const pvTimerID = ;
+
+//TimerHandle_t xTimerCreate( &pcTimerName,
+//							TickType_txTimerPeriod,
+//							UBaseType_tuxAutoReload,
+//							(void * 0,)
+//		TimerCallbackFunction_t pxCallbackFunction );
+
+#define NUM_TIMERS 5
+
+ /* An array to hold handles to the created timers. */
+ TimerHandle_t xTimers[ NUM_TIMERS ];
+
+ /* Define a callback function that will be used by multiple timer
+ instances.  The callback function does nothing but count the number
+ of times the associated timer expires, and stop the timer once the
+ timer has expired 10 times.  The count is saved as the ID of the
+ timer. */
+// void vTimerCallback( TimerHandle_t xTimer )
+// {
+// const uint32_t ulMaxExpiryCountBeforeStopping = 10;
+// uint32_t ulCount;
+//
+//    /* Optionally do something if the pxTimer parameter is NULL. */
+//    configASSERT( xTimer );
+//
+//    /* The number of times this timer has expired is saved as the
+//    timer's ID.  Obtain the count. */
+//    ulCount = ( uint32_t ) pvTimerGetTimerID( xTimer );
+//
+//    /* Increment the count, then test to see if the timer has expired
+//    ulMaxExpiryCountBeforeStopping yet. */
+//    ulCount++;
+//
+//    /* If the timer has expired 10 times then stop it from running. */
+//    if( ulCount >= ulMaxExpiryCountBeforeStopping )
+//    {
+//        /* Do not use a block time if calling a timer API function
+//        from a timer callback function, as doing so could cause a
+//        deadlock! */
+//        //xTimerStop( pxTimer, 0 ); //IS THIS WRONG ?
+//    	xTimerStop( xTimer, 0 );
+//    }
+//    else
+//    {
+//       /* Store the incremented count back into the timer's ID field
+//       so it can be read back again the next time this software timer
+//       expires. */
+//       vTimerSetTimerID( xTimer, ( void * ) ulCount );
+//    }
+// }
+
+ void vTimerCallback( TimerHandle_t xTimer )
+ {
+	 unsigned char str[100];
+	 font_t font1; // Load font for ugfx
+ 	font1 = gdispOpenFont("DejaVuSans24*");
+
+	 sprintf(str, "TIMER EXECUTED");
+	 gdispDrawString(0, 60, str, font1, Black);
+
+	 tmpA3 = 0;
+	 tmpB3 = 0;
+ }
+
+
+
 
 int main() {
+	xTimers[0] = xTimerCreate
+						( /* Just a text name, not used by the RTOS
+	                     kernel. */
+	                     "Timer",
+	                     /* The timer period in ticks, must be
+	                     greater than 0. */
+	                     5000,
+	                     /* The timers will auto-reload themselves
+	                     when they expire. */
+	                     pdTRUE,
+	                     /* The ID is used to store a count of the
+	                     number of times the timer has expired, which
+	                     is initialised to 0. */
+	                     ( void * ) 0,
+	                     /* Each timer calls the same callback when
+	                     it expires. */
+						 vTimerCallback);
+
+
 	// Initialize Board functions and graphics
 	ESPL_SystemInit();
-
-	/*
-	 *	THIS IS PART OF THE DEMO*/
 	// Initializes Draw Queue with 100 lines buffer
 	JoystickQueue = xQueueCreate(100, 2 * sizeof(char));
 
@@ -83,8 +176,8 @@ int main() {
 	//xTaskCreate(dynamicTask, "dynamicTask", dynamicStackSize, &blueCircleDefault, 3, NULL);
 	//xTaskCreate(draw2Circle, "draw2Circle", 1000, NULL, 5, NULL);
 	//xTaskCreateStatic(staticTask, "staticTask", staticStackSize, &redCircleDefault, 2, xStack, &xTaskBuffer);
-	xTaskCreate(taskTriggerA, "taskTriggerA", 1000, NULL, 5, &xTaskA);
-	xTaskCreate(taskTriggerB, "taskTriggerB", 1000, NULL, 5, &xTaskB);
+	xTaskCreate(taskTriggerA, "taskTriggerA", 1000, NULL, 2, &xTaskA);
+	xTaskCreate(taskTriggerB, "taskTriggerB", 1000, NULL, 2, NULL);
 	xTaskCreate(displayScreen, "displayScreen", 1000, NULL, 6, NULL);
 
 	// Start FreeRTOS Scheduler
@@ -129,18 +222,21 @@ void taskTriggerA ()
 	font_t font1; // Load font for ugfx
 	font1 = gdispOpenFont("DejaVuSans24*");
 
+
 	char str[100]; // buffer for messages to draw to display
 
 	while(1)
 	{
 		ulTaskNotifyTake( pdTRUE, portMAX_DELAY );
-		sprintf(str, "BUTTON A PRESSED. COUNTING: %d", tmpA3);
+		sprintf(str, "TASK NOTIFICATION #: %d", tmpA3);
 		gdispDrawString(0, 60, str, font1, Black);
+		xTimerStart(xTimers[0], 1000);
 	}
 }
 
 void taskTriggerB ()
 {
+	xSemaphore = xSemaphoreCreateBinary();
 	//gdispClear(White);
 	font_t font1; // Load font for ugfx
 	font1 = gdispOpenFont("DejaVuSans24*");
@@ -149,9 +245,27 @@ void taskTriggerB ()
 
 	while(1)
 	{
-		ulTaskNotifyTake( pdTRUE, portMAX_DELAY );
-		sprintf(str, "BUTTON B PRESSED. COUNTING: %d", tmpB3);
-		gdispDrawString(0, 70, str, font1, Black);
+	  if( xSemaphore != NULL )
+		{
+			/* See if we can obtain the semaphore.  If the semaphore is not
+			available wait 10 ticks to see if it becomes free. */
+			if( xSemaphoreTake( xSemaphore,  portMAX_DELAY ) == pdTRUE )
+			{
+				/* We were able to obtain the semaphore and can now access the
+				shared resource. */
+
+				sprintf(str, "BINARY SEMAPHORE #: %d", tmpB3);
+				gdispDrawString(0, 100, str, font1, Black);
+
+				/* We have finished accessing the shared resource.  Release the
+				semaphore. */
+				//xSemaphoreGive(xSemaphore);
+			}
+//			else
+//			{
+//				gdispClear(white)
+//			}
+		}
 	}
 }
 
@@ -292,17 +406,11 @@ void drawTask() {
 					;
 				gdispClear(White);
 
-
-				if(checkButtonA())
-				{
-					tmpA3++;
-					xTaskNotifyGive(xTaskA);
-				}
-				if(checkButtonB())
-				{
-					tmpB3++;
-					xTaskNotifyGive(xTaskB);
-				}
+//				if(checkButtonB())
+//				{
+//					tmpB3++;
+//					xTaskNotifyGive(xTaskB);
+//				}
 
 				//EXERCISE 2
 				//2.1 EXERCISE 3 FIGURES ----------------------------------------------------------------------------------------------------------------
@@ -440,8 +548,7 @@ void drawTask() {
 						ADC_GetConversionValue(ESPL_ADC_VBat));
 
 				// Print string of joystick values
-				gdispDrawString(0 + relativeJoystickPositionX,
-						30 + relativeJoystickPositionY, str, font1, Black);
+				gdispDrawString(0 + relativeJoystickPositionX, 30 + relativeJoystickPositionY, str, font1, Black);
 
 //				// Wait for display to stop writing
 //				xSemaphoreTake(ESPL_DisplayReady, portMAX_DELAY);
@@ -458,17 +565,27 @@ void drawTask() {
 		case EXERCISE3 :
 			// ********************************************* SECOND STATE *********************************************************
 		{
-					if(checkButtonA())
-					{
-						tmpA3++;
-						xTaskNotifyGive(xTaskA);
-					}
-					if(checkButtonB())
-					{
-						tmpB3++;
-						xTaskNotifyGive(xTaskB);
-					}
+			sprintf(str, "THIS IS EXERCISE 3. PRESS A AND B !");
+			gdispDrawString(0, 20, str, font1, Black);
 
+			if (checkButtonK())
+			{
+				tmpA3 = 0;
+				tmpB3 = 0;
+			}
+
+			if(checkButtonA())
+			{
+				tmpA3++;
+				xTaskNotifyGive(xTaskA);
+			}
+
+			if(checkButtonB())
+			{
+				tmpB3++;
+				xSemaphoreGiveFromISR( xSemaphore, NULL );
+				//portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+			}
 
 //				if (checkButtonA()) {
 //								cntA++;
