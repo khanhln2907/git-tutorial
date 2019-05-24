@@ -65,8 +65,18 @@ QueueHandle_t JoystickQueue;
 unsigned char redCircleDefault = 1;
 unsigned char blueCircleDefault = 1;
 
+unsigned char taskCState = 0;
+unsigned char taskCParameter = 0;
+
+
 static TaskHandle_t xTaskA = NULL;
-//static TaskHandle_t xTaskB = NULL;
+static TaskHandle_t xTaskB = NULL;
+static TaskHandle_t xTaskC = NULL;
+static TaskHandle_t xTaskStatic = NULL;
+static TaskHandle_t xTaskDynamic = NULL;
+static TaskHandle_t xTaskDrawCircle = NULL;
+
+
 //static SemaphoreHandle_t xTaskB = NULL;
 SemaphoreHandle_t xSemaphore;
 BaseType_t xHigherPriorityTaskWoken = pdFALSE;
@@ -127,18 +137,47 @@ BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 //    }
 // }
 
- void vTimerCallback( TimerHandle_t xTimer )
+ void vTimer1Callback( TimerHandle_t xTimer )
  {
 	 unsigned char str[100];
 	 font_t font1; // Load font for ugfx
- 	font1 = gdispOpenFont("DejaVuSans24*");
+	 font1 = gdispOpenFont("DejaVuSans24*");
 
-	 sprintf(str, "TIMER EXECUTED");
+	 sprintf(str, "RESET RESET RESET RESET RESET RESET");
 	 gdispDrawString(0, 60, str, font1, Black);
 
 	 tmpA3 = 0;
 	 tmpB3 = 0;
+
+	 xTimerStop(xTimer, 1000);
  }
+
+// if(checkButtonC())
+// 			{
+// 				taskCState = !taskCState;
+// 				if(taskCState == 1)
+// 				{
+// 					xTimerStart(xTimers[1],0);
+//
+// 				}
+// 				else
+// 				{
+// 					xTimerStop(xTimers[1],0);
+// 				}
+// 			}
+
+
+
+ void vTimer2Callback( TimerHandle_t xTimer )
+ {
+	 if(taskCState)
+	 {
+		 taskCParameter++;
+		 vTaskResume( xTaskC );
+	 }
+ }
+
+
 
 
 
@@ -147,7 +186,7 @@ int main() {
 	xTimers[0] = xTimerCreate
 						( /* Just a text name, not used by the RTOS
 	                     kernel. */
-	                     "Timer",
+	                     "Timer1",
 	                     /* The timer period in ticks, must be
 	                     greater than 0. */
 	                     5000,
@@ -160,7 +199,27 @@ int main() {
 	                     ( void * ) 0,
 	                     /* Each timer calls the same callback when
 	                     it expires. */
-						 vTimerCallback);
+						 vTimer1Callback);
+
+
+	xTimers[1] = xTimerCreate
+							( /* Just a text name, not used by the RTOS
+		                     kernel. */
+		                     "Timer2",
+		                     /* The timer period in ticks, must be
+		                     greater than 0. */
+		                     1000,
+		                     /* The timers will auto-reload themselves
+		                     when they expire. */
+		                     pdTRUE,
+		                     /* The ID is used to store a count of the
+		                     number of times the timer has expired, which
+		                     is initialised to 0. */
+		                     ( void * ) 0,
+		                     /* Each timer calls the same callback when
+		                     it expires. */
+							 vTimer2Callback);
+
 
 
 	// Initialize Board functions and graphics
@@ -169,16 +228,20 @@ int main() {
 	JoystickQueue = xQueueCreate(100, 2 * sizeof(char));
 
 	// Initializes Tasks with their respective priority
-	xTaskCreate(drawTask, "drawTask", 1000, NULL, 4, NULL);
+	xTaskCreate(drawTask, "drawTask", 1000, NULL, 6, NULL);
 	xTaskCreate(checkJoystick, "checkJoystick", 1000, NULL, 3, NULL);
 	xTaskCreate(changeState, "changeState", 1000, NULL, 4, NULL);
-	//TaskHandle_t xHandle = NULL;
-	//xTaskCreate(dynamicTask, "dynamicTask", dynamicStackSize, &blueCircleDefault, 3, NULL);
-	//xTaskCreate(draw2Circle, "draw2Circle", 1000, NULL, 5, NULL);
-	//xTaskCreateStatic(staticTask, "staticTask", staticStackSize, &redCircleDefault, 2, xStack, &xTaskBuffer);
+	//EXERCISE 3
+	//xTaskCreate(dynamicTask, "dynamicTask", dynamicStackSize, &blueCircleDefault, 3, &xTaskDynamic);
+	//xTaskCreateStatic(staticTask, "staticTask", staticStackSize, &redCircleDefault, 3, xStack, &xTaskStatic);
+	//xTaskCreate(draw2Circle, "draw2Circle", 1000, NULL, 4, &xTaskDrawCircle);
+
 	xTaskCreate(taskTriggerA, "taskTriggerA", 1000, NULL, 2, &xTaskA);
-	xTaskCreate(taskTriggerB, "taskTriggerB", 1000, NULL, 2, NULL);
-	xTaskCreate(displayScreen, "displayScreen", 1000, NULL, 6, NULL);
+	xTaskCreate(taskTriggerB, "taskTriggerB", 1000, NULL, 2, &xTaskB);
+	xTaskCreate(taskTriggerC, "taskTriggerC", 1000, &taskCParameter, 2, &xTaskC);
+
+
+	xTaskCreate(displayScreen, "displayScreen", 1000, NULL, 7, NULL);
 
 	// Start FreeRTOS Scheduler
 	vTaskStartScheduler();
@@ -195,6 +258,10 @@ void staticTask(unsigned char * p1)
 
 	while(1)
 	{
+		if(state!=2)
+		{
+			vTaskSuspend( xTaskStatic );
+		}
 		*p1 = !(*p1); // Change State of the Circle
 		vTaskDelayUntil(&xLastWakeTime, tickFramerate);
 	}
@@ -212,6 +279,10 @@ void dynamicTask(unsigned char * p2)
 
 	while(1)
 	{
+		if(state!=2)
+		{
+			vTaskSuspend( xTaskDynamic );
+		}
 		*p2 = !(*p2); // Change State of the Circle
 		vTaskDelayUntil(&xLastWakeTime, tickFramerate);
 	}
@@ -230,7 +301,7 @@ void taskTriggerA ()
 		ulTaskNotifyTake( pdTRUE, portMAX_DELAY );
 		sprintf(str, "TASK NOTIFICATION #: %d", tmpA3);
 		gdispDrawString(0, 60, str, font1, Black);
-		xTimerStart(xTimers[0], 1000);
+		xTimerStart(xTimers[0],0);
 	}
 }
 
@@ -256,6 +327,7 @@ void taskTriggerB ()
 
 				sprintf(str, "BINARY SEMAPHORE #: %d", tmpB3);
 				gdispDrawString(0, 100, str, font1, Black);
+				xTimerStart(xTimers[0],0);
 
 				/* We have finished accessing the shared resource.  Release the
 				semaphore. */
@@ -269,6 +341,24 @@ void taskTriggerB ()
 	}
 }
 
+void taskTriggerC(unsigned char *p3)
+{
+	unsigned char str[100];
+	font_t font1; // Load font for ugfx
+	font1 = gdispOpenFont("DejaVuSans24*");
+
+	while(1)
+	{
+		if(!taskCState)
+		{
+			vTaskSuspend( xTaskC );
+		}
+		sprintf(str, "TASK C COUNTING: %d", *p3);
+		gdispDrawString(0, 140, str, font1, Black);
+	}
+}
+
+
 void draw2Circle()
 {
 	TickType_t xLastWakeTime;
@@ -278,6 +368,10 @@ void draw2Circle()
 
 	while(1)
 	{
+		if(state!=2)
+		{
+			vTaskSuspend( xTaskDrawCircle );
+		}
 		gdispClear(White);
 		if(redCircleDefault == 1)
 		{
@@ -565,6 +659,11 @@ void drawTask() {
 		case EXERCISE3 :
 			// ********************************************* SECOND STATE *********************************************************
 		{
+//			vTaskResume( xTaskStatic );
+//			vTaskResume( xTaskDynamic );
+//			vTaskResume( xTaskDrawCircle );
+
+
 			sprintf(str, "THIS IS EXERCISE 3. PRESS A AND B !");
 			gdispDrawString(0, 20, str, font1, Black);
 
@@ -583,9 +682,25 @@ void drawTask() {
 			if(checkButtonB())
 			{
 				tmpB3++;
-				xSemaphoreGiveFromISR( xSemaphore, NULL );
+				//xSemaphoreGiveFromISR( xSemaphore, NULL );
+				xSemaphoreGive(xSemaphore );
 				//portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 			}
+
+			if(checkButtonC())
+			{
+				taskCState = !taskCState;
+				if(taskCState == 1)
+				{
+					xTimerStart(xTimers[1],0);
+
+				}
+				else
+				{
+					xTimerStop(xTimers[1],0);
+				}
+			}
+
 
 //				if (checkButtonA()) {
 //								cntA++;
@@ -876,7 +991,7 @@ unsigned int short checkButtonE() {
 /*
  * 1) unsigned int short vs unsigned char in checkButton
  *2) Tick frequency ?
- *
+ *3) Reference of p3 in TaskC, why doesnt it change ?
  *
  *
  *---------------------
