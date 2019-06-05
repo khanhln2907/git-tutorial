@@ -1,0 +1,3 @@
+/DIST/home/lab_espl_stud10/git-tutorial1/CMakeFiles/rebuild_cache.dir
+/DIST/home/lab_espl_stud10/git-tutorial1/CMakeFiles/edit_cache.dir
+/DIST/home/lab_espl_stud10/git-tutorial1/CMakeFiles/foo.dir
