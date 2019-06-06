@@ -165,6 +165,9 @@ CMAKE_STRIP:FILEPATH=/usr/bin/strip
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
+//Dependencies for target
+ESPL_LIB_LIB_DEPENDS:STATIC=
+
 //Value Computed by CMake
 git_tutorial_BINARY_DIR:STATIC=/DIST/home/lab_espl_stud10/git-tutorial1
 

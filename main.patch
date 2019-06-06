@@ -1,0 +1,11 @@
+diff --git a/src/main.c b/src/main.c
+index 5e3807e..89771b4 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -3,5 +3,6 @@
+ int main()
+ {
+ 	printf("\n Hello World \n");
++	printf("Hello I am Khanh");
+ 	return 0;
+ }

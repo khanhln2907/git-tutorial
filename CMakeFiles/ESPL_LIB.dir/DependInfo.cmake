@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_C
-  "/DIST/home/lab_espl_stud10/git-tutorial1/src/main.c" "/DIST/home/lab_espl_stud10/git-tutorial1/CMakeFiles/foo.dir/src/main.c.o"
+  "/DIST/home/lab_espl_stud10/git-tutorial1/lib/espl_lib.c" "/DIST/home/lab_espl_stud10/git-tutorial1/CMakeFiles/ESPL_LIB.dir/lib/espl_lib.c.o"
   )
 set(CMAKE_C_COMPILER_ID "GNU")
 
@@ -16,7 +16,6 @@ set(CMAKE_C_TARGET_INCLUDE_PATH
 
 # Targets to which this target links.
 set(CMAKE_TARGET_LINKED_INFO_FILES
-  "/DIST/home/lab_espl_stud10/git-tutorial1/CMakeFiles/ESPL_LIB.dir/DependInfo.cmake"
   )
 
 # Fortran module output directory.
