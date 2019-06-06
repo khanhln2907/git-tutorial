@@ -1,0 +1,3 @@
+/home/khanhln/git_tutorial/build/CMakeFiles/edit_cache.dir
+/home/khanhln/git_tutorial/build/CMakeFiles/rebuild_cache.dir
+/home/khanhln/git_tutorial/build/CMakeFiles/myproject.dir
